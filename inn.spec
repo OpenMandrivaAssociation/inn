@@ -28,7 +28,7 @@ BuildRequires:	autoconf2.1 bison flex
 BuildRequires:  openssl-devel perl-devel e2fsprogs-devel
 BuildRequires:	db4.2-devel
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
-Requires(pre):	/sbin/chkconfig grep coreutils sed rpm-helper
+Requires(pre):	chkconfig grep coreutils sed rpm-helper
 Requires:	cleanfeed, perl = %{perl_version}
 Requires:	sendmail-command
 Conflicts:	echelog jabber2
