@@ -1,5 +1,5 @@
 %define version 2.4.3
-%define release %mkrel 6
+%define release %mkrel 7
 
 %define perl_version %(rpm -q --qf '%%{epoch}:%%{VERSION}' perl)
 
