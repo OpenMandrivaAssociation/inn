@@ -1,12 +1,9 @@
-%define version 2.4.3
-%define release %mkrel 7
-
 %define perl_version %(rpm -q --qf '%%{epoch}:%%{VERSION}' perl)
 
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
-Version:	%{version}
-Release:	%{release}
+Version:	2.4.3
+Release:	%mkrel 7
 License:	GPL
 Group:		System/Servers
 Url:		http://www.isc.org/products/INN/
@@ -20,18 +17,26 @@ Source6:	inn-etc-nnrp.access
 Source7:	inn-cron-nntpsend
 Source8:	innd.init
 Source10:	inn-faq.tar.bz2
-Patch0:		inn-2.4.0-rh.patch
-Patch2:		inn-2.4.2-fix-make-install.patch
-Patch3:		inn-2.4.3-lib64.patch
-Patch4:		inn-2.4.3-use-db4.patch
-BuildRequires:	autoconf2.1 bison flex
-BuildRequires:  openssl-devel perl-devel e2fsprogs-devel
+Patch0:		inn-2.4.3.rh.patch
+Patch1:		inn-2.4.1.perl.patch
+Patch2:		inn-2.4.1.pie.patch
+Patch3:		inn-2.4.1.posix.patch
+Patch4:		inn-2.4.3.warn.patch
+Patch5:		inn-2.4.2-makedbz.patch
+Patch6:		inn-2.4.3-lib64.patch
+Patch7:		inn-2.4.3-use-db4.patch
+BuildRequires:	autoconf2.1
+BuildRequires:	bison
 BuildRequires:	db4.2-devel
-Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRequires:	e2fsprogs-devel
+BuildRequires:	flex
+BuildRequires:  openssl-devel
+BuildRequires:	perl-devel
 Requires(pre):	chkconfig grep coreutils sed rpm-helper
 Requires:	cleanfeed, perl = %{perl_version}
 Requires:	sendmail-command
 Conflicts:	echelog jabber2
+Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %define _requires_exceptions perl(bigint.pl)\\|perl(ftp.pl)
 
@@ -76,18 +81,24 @@ Install inews if you need a program for posting Usenet articles to local
 news servers.
 
 %prep
+
 %setup -q -a 10
-%patch0 -p1 -b .redhat
-%patch2 -p1 -b .make_install
-%patch3 -p1 -b .lib64
-%patch4 -p1 -b .use-db4
-autoconf
+%patch0 -p1 -b .rh
+%patch1 -p1 -b .perl
+%patch2 -p1 -b .pie
+%patch3 -p1 -b .posix
+%patch4 -p1 -b .warn
+%patch5 -p1 -b .makedbz
+%patch6 -p1 -b .lib64
+%patch7 -p1 -b .use-db4
+
+autoconf-2.13
 
 find -type f | xargs perl -pi -e '@meuh = qw(LOCK_READ LOCK_WRITE LOCK_UNLOCK); foreach $a (@meuh) { s/\b$a\b/INN_$a/g }'
 
 %build
 %serverbuild
-export CFLAGS="$CFLAGS -DHAVE_ET_COM_ERR_H"
+export CFLAGS="$CFLAGS -DHAVE_ET_COM_ERR_H -fPIC"
 
 rm -f config.cache
 libtoolize --copy --force
@@ -113,85 +124,86 @@ libtoolize --copy --force
 %make
 
 %install
-rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT
+rm -rf %{buildroot}
+
+mkdir -p %{buildroot}
 perl -pi -e 's/^OWNER.*/OWNER = /; s/^ROWNER.*/ROWNER = /' Makefile.global
-make install DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR=%{buildroot}
 
 # -- Install man pages needed by suck et al.
-mkdir -p $RPM_BUILD_ROOT/usr/include/inn
+mkdir -p %{buildroot}/usr/include/inn
 for f in clibrary.h config.h dbz.h libinn.h storage.h
 do
-    install -c -m 0644 ./include/$f $RPM_BUILD_ROOT/usr/include/inn
+    install -c -m 0644 ./include/$f %{buildroot}/usr/include/inn
 done
 
-mkdir -p $RPM_BUILD_ROOT/etc
-mv $RPM_BUILD_ROOT/usr/bin/rc.news $RPM_BUILD_ROOT/etc
-chmod 755 $RPM_BUILD_ROOT/etc/rc.news
+mkdir -p %{buildroot}/etc
+mv %{buildroot}/usr/bin/rc.news %{buildroot}/etc
+chmod 755 %{buildroot}/etc/rc.news
 
-touch $RPM_BUILD_ROOT/var/lib/news/subscriptions
-chmod 644 $RPM_BUILD_ROOT/var/lib/news/subscriptions
+touch %{buildroot}/var/lib/news/subscriptions
+chmod 644 %{buildroot}/var/lib/news/subscriptions
 
 install -m 644 %{SOURCE1} \
-        $RPM_BUILD_ROOT/var/lib/news/active
+        %{buildroot}/var/lib/news/active
 install -m 644 %{SOURCE2} \
-        $RPM_BUILD_ROOT/var/lib/news/distributions
+        %{buildroot}/var/lib/news/distributions
 install -m 644 %{SOURCE3} \
-        $RPM_BUILD_ROOT/var/lib/news/newsgroups
+        %{buildroot}/var/lib/news/newsgroups
 
-mkdir -p $RPM_BUILD_ROOT/etc/cron.hourly $RPM_BUILD_ROOT/etc/cron.daily
+mkdir -p %{buildroot}/etc/cron.hourly %{buildroot}/etc/cron.daily
 install -m755 %{SOURCE4} \
-        $RPM_BUILD_ROOT/etc/cron.daily/inn-cron-expire
+        %{buildroot}/etc/cron.daily/inn-cron-expire
 install -m755 %{SOURCE5} \
-        $RPM_BUILD_ROOT/etc/cron.hourly/inn-cron-rnews
+        %{buildroot}/etc/cron.hourly/inn-cron-rnews
 install -m755 %{SOURCE7} \
-        $RPM_BUILD_ROOT/etc/cron.hourly/inn-cron-nntpsend
+        %{buildroot}/etc/cron.hourly/inn-cron-nntpsend
 
 install -m440 %{SOURCE6} \
-        $RPM_BUILD_ROOT/etc/news/nnrp.access
+        %{buildroot}/etc/news/nnrp.access
 
-mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d/
+mkdir -p %{buildroot}/etc/rc.d/init.d/
 install -m 755 %{SOURCE8} \
-	$RPM_BUILD_ROOT/etc/rc.d/init.d/innd
+	%{buildroot}/etc/rc.d/init.d/innd
 
-rm -f $RPM_BUILD_ROOT/var/lib/news/history
-touch $RPM_BUILD_ROOT/var/lib/news/history
-touch $RPM_BUILD_ROOT/var/lib/news/.news.daily
-LD_LIBRARY_PATH=$RPM_BUILD_ROOT%{_libdir} $RPM_BUILD_ROOT/usr/bin/makehistory \
-	-a $RPM_BUILD_ROOT/var/lib/news/active \
-	-r -f $RPM_BUILD_ROOT/var/lib/news/history || :
-chmod 644 $RPM_BUILD_ROOT/var/lib/news/*
-chmod 644 $RPM_BUILD_ROOT/var/lib/news/.news.daily
+rm -f %{buildroot}/var/lib/news/history
+touch %{buildroot}/var/lib/news/history
+touch %{buildroot}/var/lib/news/.news.daily
+LD_LIBRARY_PATH=%{buildroot}%{_libdir} %{buildroot}/usr/bin/makehistory \
+	-a %{buildroot}/var/lib/news/active \
+	-r -f %{buildroot}/var/lib/news/history || :
+chmod 644 %{buildroot}/var/lib/news/*
+chmod 644 %{buildroot}/var/lib/news/.news.daily
 
-mkdir -p $RPM_BUILD_ROOT/var/spool/news/tmp
+mkdir -p %{buildroot}/var/spool/news/tmp
 
 # we get this from cleanfeed
 # (sb) true - but it's not being found by innd - fix this
-rm -f $RPM_BUILD_ROOT/%{_libdir}/news/bin/filter/filter_innd.pl
-pushd $RPM_BUILD_ROOT/%{_libdir}/news/bin/filter
+rm -f %{buildroot}/%{_libdir}/news/bin/filter/filter_innd.pl
+pushd %{buildroot}/%{_libdir}/news/bin/filter
 ln -sf ../control/filter_innd.pl . 
 popd
 
 # fix location of real library files
-mv $RPM_BUILD_ROOT%{_libdir}/{inn/lib{inn,storage}.a,/}
+mv %{buildroot}%{_libdir}/{inn/lib{inn,storage}.a,/}
 
 #Fix perms in sample directory to avoid bogus dependencies
 find samples -name "*.in" -exec chmod a-x {} \;
 
 # (sb) doc install conflicts with rpm %%doc, even when config is setup
 # correctly. Just rm these files and let %%doc take care of it
-rm -fr $RPM_BUILD_ROOT/%{_usr}/doc
+rm -fr %{buildroot}/%{_usr}/doc
 
 # (sb) a portion of the header files are in /usr/include, while the rest
 # are in /usr/include/inn - paths.h conflicts with glibc-devel
 # right now inn-devel isn't used for anything, nor do the other header
 # files seem to be looking for them a directory up - move them
-mv $RPM_BUILD_ROOT/%{_includedir}/*.h $RPM_BUILD_ROOT/%{_includedir}/inn
+mv %{buildroot}/%{_includedir}/*.h %{buildroot}/%{_includedir}/inn
 
 #Build filelist
 echo "%defattr(-,news,news)" > files.list
-find $RPM_BUILD_ROOT -type f -or -type l | \
-	sed -e "s|$RPM_BUILD_ROOT||g" | \
+find %{buildroot} -type f -or -type l | \
+	sed -e "s|%{buildroot}||g" | \
 	sed 's|^%{_initrddir}/innd|%config(noreplace) %attr(755,root,root) &|' | \
 	sed 's|^/etc/news/inn.conf|%attr(640,uucp,news) %config(noreplace) %verify(not size mtime md5) &|' | \
 	sed 's|^/etc/news|%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) &|' | \
@@ -213,19 +225,19 @@ find $RPM_BUILD_ROOT -type f -or -type l | \
 echo "%defattr(644,root,root)" > files.devel
 egrep "\.(h|so|a|la)$" files.list >> files.devel
 echo "%attr(-,root,root)" >> files.main
-find $RPM_BUILD_ROOT%{_mandir}/man[158] -type f | \
-	sed -e "s|$RPM_BUILD_ROOT||g" | \
-	sed -e "s|\.[158]|&.bz2|g" | \
+find %{buildroot}%{_mandir}/man[158] -type f | \
+	sed -e "s|%{buildroot}||g" | \
+	sed -e "s|\.[158]|&.\*|g" | \
 	grep -v inews >> files.main
 
 # (sb) file mode now prevents strip from working?
-chmod u+w $RPM_BUILD_ROOT/%{_bindir}/*
-chmod u+w $RPM_BUILD_ROOT/%{_bindir}/auth/resolv/*
-chmod u+w $RPM_BUILD_ROOT/%{_bindir}/auth/passwd/*
-chmod u+w $RPM_BUILD_ROOT/%{_bindir}/rnews.libexec/*
+chmod u+w %{buildroot}/%{_bindir}/*
+chmod u+w %{buildroot}/%{_bindir}/auth/resolv/*
+chmod u+w %{buildroot}/%{_bindir}/auth/passwd/*
+chmod u+w %{buildroot}/%{_bindir}/rnews.libexec/*
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 rm -f files.list files.main files.devel files.inews
 
 %post
@@ -346,5 +358,3 @@ fi
 %defattr(-,root,root)
 %attr(755,root,root) /usr/bin/inews
 %{_mandir}/man1/inews*
-
-
