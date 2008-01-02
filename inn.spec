@@ -36,6 +36,7 @@ Requires(pre):	chkconfig grep coreutils sed rpm-helper
 Requires:	cleanfeed, perl = %{perl_version}
 Requires:	sendmail-command
 Conflicts:	echelog jabber2
+Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %define _requires_exceptions perl(bigint.pl)\\|perl(ftp.pl)
 
