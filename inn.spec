@@ -2,12 +2,12 @@
 
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
-Version:	2.4.3
-Release:	%mkrel 9
+Version:	2.4.4
+Release:	%mkrel 0
 License:	GPLv2+
 Group:		System/Servers
 Url:		http://www.isc.org/products/INN/
-Source0:	ftp://ftp.isc.org/isc/inn/inn-%{version}.tar.bz2
+Source0:	ftp://ftp.isc.org/isc/inn/inn-%{version}.tar.gz
 Source1:	inn-default-active
 Source2:	inn-default-distributions
 Source3:	inn-default-newsgroups
@@ -24,10 +24,9 @@ Patch3:		inn-2.4.1.posix.patch
 Patch4:		inn-2.4.3.warn.patch
 Patch5:		inn-2.4.2-makedbz.patch
 Patch6:		inn-2.4.3-lib64.patch
-Patch7:		inn-2.4.3-use-db4.patch
 BuildRequires:	autoconf2.1
 BuildRequires:	bison
-BuildRequires:	db4.2-devel
+BuildRequires:	db4-devel
 BuildRequires:	e2fsprogs-devel
 BuildRequires:	flex
 BuildRequires:  openssl-devel
@@ -88,11 +87,10 @@ news servers.
 %patch2 -p1 -b .pie
 %patch3 -p1 -b .posix
 %patch4 -p1 -b .warn
-%patch5 -p1 -b .makedbz
+%patch5 -p0 -b .makedbz
 %patch6 -p1 -b .lib64
-%patch7 -p1 -b .use-db4
 
-autoconf-2.13
+rm -f configure; autoconf-2.13
 
 find -type f | xargs perl -pi -e '@meuh = qw(LOCK_READ LOCK_WRITE LOCK_UNLOCK); foreach $a (@meuh) { s/\b$a\b/INN_$a/g }'
 
@@ -128,6 +126,12 @@ rm -rf %{buildroot}
 
 mkdir -p %{buildroot}
 perl -pi -e 's/^OWNER.*/OWNER = /; s/^ROWNER.*/ROWNER = /' Makefile.global
+
+TMP_UID="`id -un`"
+TMP_GID="`id -gn`"
+perl -pi -e "s|^NEWSUSER.*|NEWSUSER=${TMP_UID}|g" Makefile.global
+perl -pi -e "s|^NEWSGROUP.*|NEWSGROUP=${TMP_GID}|g" Makefile.global
+
 make install DESTDIR=%{buildroot}
 
 # -- Install man pages needed by suck et al.
