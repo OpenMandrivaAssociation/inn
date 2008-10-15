@@ -2,7 +2,7 @@
 
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
-Version:	2.4.4
+Version:	2.4.5
 Release:	%mkrel 1
 License:	GPLv2+
 Group:		System/Servers
