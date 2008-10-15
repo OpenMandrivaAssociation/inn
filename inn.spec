@@ -119,7 +119,7 @@ libtoolize --copy --force
 	--with-sendmail=/usr/sbin/sendmail \
 	--with-berkeleydb=/usr/include/db4
 
-%make
+make
 
 %install
 rm -rf %{buildroot}
