@@ -3,7 +3,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.4.5
-Release:	%mkrel 1
+Release:	%mkrel 2
 License:	GPLv2+
 Group:		System/Servers
 Url:		http://www.isc.org/products/INN/
@@ -24,6 +24,7 @@ Patch3:		inn-2.4.1.posix.patch
 Patch4:		inn-2.4.3.warn.patch
 Patch5:		inn-2.4.2-makedbz.patch
 Patch6:		inn-2.4.3-lib64.patch
+Patch7:		inn-2.4.5-format_not_a_string_literal_and_no_format_arguments.diff
 BuildRequires:	autoconf2.1
 BuildRequires:	bison
 BuildRequires:	db4-devel
@@ -89,6 +90,7 @@ news servers.
 %patch4 -p1 -b .warn
 %patch5 -p0 -b .makedbz
 %patch6 -p1 -b .lib64
+%patch7 -p0 -b .format_not_a_string_literal_and_no_format_arguments
 
 rm -f configure; autoconf-2.13
 
