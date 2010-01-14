@@ -2,11 +2,11 @@
 
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
-Version:	2.4.6
-Release:	%mkrel 3
+Version:	2.5.1
+Release:	%mkrel 1
 License:	GPLv2+
 Group:		System/Servers
-Url:		http://www.isc.org/products/INN/
+URL:		http://www.isc.org/products/INN/
 Source0:	ftp://ftp.isc.org/isc/inn/inn-%{version}.tar.gz
 Source1:	inn-default-active
 Source2:	inn-default-distributions
@@ -17,21 +17,26 @@ Source6:	inn-etc-nnrp.access
 Source7:	inn-cron-nntpsend
 Source8:	innd.init
 Source10:	inn-faq.tar.bz2
-Patch0:		inn-2.4.3.rh.patch
+Patch0:		inn-2.5.1.rh.patch
 Patch1:		inn-2.4.1.perl.patch
-Patch2:		inn-2.4.1.pie.patch
+Patch2:		inn-2.5.1.pie.patch
 Patch3:		inn-2.4.1.posix.patch
-Patch4:		inn-2.4.3.warn.patch
-Patch5:		inn-2.4.2-makedbz.patch
-Patch6:		inn-2.4.3-lib64.patch
-Patch7:		inn-2.4.5-format_not_a_string_literal_and_no_format_arguments.diff
-BuildRequires:	autoconf2.1
+Patch4:		inn-2.5.1.warn.patch
+Patch5:		inn-2.5.1-makedbz.patch
+#Patch6:		inn-2.4.3-lib64.patch
+#Patch7:		inn-2.4.5-format_not_a_string_literal_and_no_format_arguments.diff
+Patch8:		inn-2.5.1-nologinshell.patch
+Patch9:		inn-2.5.0-chown.patch
+Patch10:	inn-redhat_build.patch
+Patch11:	inn-shared.patch
 BuildRequires:	bison
 BuildRequires:	db4-devel
 BuildRequires:	e2fsprogs-devel
 BuildRequires:	flex
 BuildRequires:  openssl-devel
 BuildRequires:	perl-devel
+BuildRequires:	krb5-devel
+BuildRequires:	pam-devel
 Requires(pre):	chkconfig grep coreutils sed rpm-helper
 Requires:	cleanfeed, perl = %{perl_version}
 Requires:	sendmail-command
@@ -88,11 +93,16 @@ news servers.
 %patch2 -p1 -b .pie
 %patch3 -p1 -b .posix
 %patch4 -p1 -b .warn
-%patch5 -p0 -b .makedbz
-%patch6 -p1 -b .lib64
-%patch7 -p0 -b .format_not_a_string_literal_and_no_format_arguments
+%patch5 -p1 -b .makedbz
+#%patch6 -p1 -b .lib64
+#%patch7 -p0 -b .format_not_a_string_literal_and_no_format_arguments
+%patch8 -p1 -b .nologin
+%patch9 -p1 -b .chown
+%patch10 -p1 -b .redhat_build
+%patch11 -p1 -b .shared
 
-rm -f configure; autoconf-2.13
+
+#rm -f configure; autoconf-2.13
 
 find -type f | xargs perl -pi -e '@meuh = qw(LOCK_READ LOCK_WRITE LOCK_UNLOCK); foreach $a (@meuh) { s/\b$a\b/INN_$a/g }'
 
@@ -100,9 +110,9 @@ find -type f | xargs perl -pi -e '@meuh = qw(LOCK_READ LOCK_WRITE LOCK_UNLOCK); 
 %serverbuild
 export CFLAGS="$CFLAGS -DHAVE_ET_COM_ERR_H -fPIC"
 
-rm -f config.cache
-libtoolize --copy --force
-./configure --prefix=/usr  \
+#rm -f config.cache
+#libtoolize --copy --force
+%configure2_5x --prefix=/usr  \
 	--libdir=%{_libdir} \
 	--with-lib-dir=%{_libdir}/%{name} \
 	--with-filter-dir=%{_libdir}/news/bin/filter \
@@ -113,15 +123,17 @@ libtoolize --copy --force
 	--with-log-dir=/var/log/news --with-spool-dir=/var/spool/news\
 	--with-db-dir=/var/lib/news --with-run-dir=/var/run/news \
 	--with-etc-dir=/etc/news --with-tmp-path=/var/spool/news/tmp \
-	--with-perl --enable-shared --enable-static \
+	--with-perl --enable-shared --disable-static \
 	--enable-tagged-hash --enable-merge-to-groups \
+	--enable-ipv6 --with-libperl-dir=%{perl_vendorlib} \
 	--with-news-user=news --with-news-group=news \
 	--with-news-master=news --enable-pgp-verify \
 	--with-openssl \
 	--with-sendmail=/usr/sbin/sendmail \
-	--with-berkeleydb=/usr/include/db4
+	--with-berkeleydb=/usr/include/db4 \
+	--with-http-dir=%{_sharedstatedir}/news/http
 
-make
+%make
 
 %install
 rm -rf %{buildroot}
@@ -134,13 +146,13 @@ TMP_GID="`id -gn`"
 perl -pi -e "s|^NEWSUSER.*|NEWSUSER=${TMP_UID}|g" Makefile.global
 perl -pi -e "s|^NEWSGROUP.*|NEWSGROUP=${TMP_GID}|g" Makefile.global
 
-make install DESTDIR=%{buildroot}
+%makeinstall_std
 
 # -- Install man pages needed by suck et al.
-mkdir -p %{buildroot}/usr/include/inn
-for f in clibrary.h config.h dbz.h libinn.h storage.h
+mkdir -p %{buildroot}%{_includedir}/inn
+for f in clibrary.h config.h
 do
-    install -c -m 0644 ./include/$f %{buildroot}/usr/include/inn
+    install -c -m 0644 ./include/$f %{buildroot}%{_includedir}/inn
 done
 
 mkdir -p %{buildroot}/etc
@@ -191,7 +203,7 @@ ln -sf ../control/filter_innd.pl .
 popd
 
 # fix location of real library files
-mv %{buildroot}%{_libdir}/{inn/lib{inn,storage}.a,/}
+#mv %{buildroot}%{_libdir}/{inn/lib{inn,storage}.a,/}
 
 #Fix perms in sample directory to avoid bogus dependencies
 find samples -name "*.in" -exec chmod a-x {} \;
@@ -204,7 +216,7 @@ rm -fr %{buildroot}/%{_usr}/doc
 # are in /usr/include/inn - paths.h conflicts with glibc-devel
 # right now inn-devel isn't used for anything, nor do the other header
 # files seem to be looking for them a directory up - move them
-mv %{buildroot}/%{_includedir}/*.h %{buildroot}/%{_includedir}/inn
+#mv %{buildroot}/%{_includedir}/*.h %{buildroot}/%{_includedir}/inn
 
 #Build filelist
 echo "%defattr(-,news,news)" > files.list
@@ -325,34 +337,33 @@ fi
 
 %files -f files.main
 %defattr(-,news,news)
-%dir %{_libdir}/%{name}
-%dir %{_libdir}/news
-%dir %{_libdir}/news/bin
-%dir %{_libdir}/news/bin/control
-%dir %{_libdir}/news/bin/filter
-%dir %{_bindir}/rnews.libexec
-%dir %{_bindir}/auth
-%dir %{_bindir}/auth/resolv
-%dir %{_bindir}/auth/passwd
-%dir %{_sysconfdir}/news
-%dir /var/spool/news
-%dir /var/spool/news/articles
-%dir /var/spool/news/overview
-%dir /var/spool/news/archive
+%{_libdir}/news/bin/control
+%{_libdir}/news/bin/filter
+%{_bindir}/rnews.libexec
+%{_bindir}/auth/resolv
+%{_bindir}/auth/passwd
+%{_sysconfdir}/news
+%{perl_vendorlib}/INN/Config.pm
+/var/spool/news
+/var/spool/news/articles
+/var/spool/news/overview
+/var/spool/news/archive
 %attr(775,news,news) %dir /var/spool/news/incoming
 %attr(775,news,news) %dir /var/spool/news/incoming/bad
-%dir /var/spool/news/outgoing
-%dir /var/spool/news/innfeed
+/var/spool/news/outgoing
+/var/spool/news/innfeed
 %attr(770,news,news) %dir /var/spool/news/tmp
 %attr(770,news,news) %dir /var/log/news
-%dir /var/log/news/OLD
+/var/log/news/OLD
 %attr(770,news,news) %dir /var/lib/news
 %attr(770,news,news) %dir /var/run/news
+%{_mandir}/man5/*5*
+%{_mandir}/man8/*8*
 
 %attr(-,root,root) %doc HACKING LICENSE MANIFEST TODO
 %attr(-,root,root) %doc README* ChangeLog CONTRIBUTORS INSTALL NEWS
 %attr(-,root,root) %doc faq
-%attr(-,root,root) %doc doc/hook* doc/config* doc/compliance-nntp 
+%attr(-,root,root) %doc doc/hook* doc/config*
 %attr(-,root,root) %doc doc/sample-control doc/GPL doc/history
 
 %files devel -f files.devel
