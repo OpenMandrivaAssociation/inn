@@ -3,7 +3,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.5.1
-Release:	%mkrel 3
+Release:	%mkrel 4
 License:	GPLv2+
 Group:		System/Servers
 URL:		http://www.isc.org/products/INN/
@@ -157,7 +157,11 @@ done
 
 mkdir -p %{buildroot}/etc
 mv %{buildroot}/usr/bin/rc.news %{buildroot}/etc
+
+perl -pi -e 's|%{_libdir}/inn/news/innshellvars|%{_bindir}/innshellvars|' %{buildroot}/etc/rc.news
 chmod 755 %{buildroot}/etc/rc.news
+
+
 
 touch %{buildroot}/var/lib/news/subscriptions
 chmod 644 %{buildroot}/var/lib/news/subscriptions
