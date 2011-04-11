@@ -3,7 +3,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.5.1
-Release:	%mkrel 8
+Release:	%mkrel 9
 License:	GPLv2+
 Group:		System/Servers
 URL:		http://www.isc.org/products/INN/
@@ -30,7 +30,7 @@ Patch9:		inn-2.5.0-chown.patch
 Patch10:	inn-redhat_build.patch
 Patch11:	inn-shared.patch
 BuildRequires:	bison
-BuildRequires:	db4-devel
+BuildRequires:	db-devel
 BuildRequires:	e2fsprogs-devel
 BuildRequires:	flex
 BuildRequires:  openssl-devel
@@ -94,8 +94,8 @@ news servers.
 %patch3 -p1 -b .posix
 %patch4 -p1 -b .warn
 %patch5 -p1 -b .makedbz
-#%patch6 -p1 -b .lib64
-#%patch7 -p0 -b .format_not_a_string_literal_and_no_format_arguments
+#patch6 -p1 -b .lib64
+#patch7 -p0 -b .format_not_a_string_literal_and_no_format_arguments
 %patch8 -p1 -b .nologin
 %patch9 -p1 -b .chown
 %patch10 -p1 -b .redhat_build
