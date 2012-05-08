@@ -341,14 +341,6 @@ fi
 
 %files -f files.main
 %defattr(-,news,news)
-%{_libdir}/news/bin/control
-%{_libdir}/news/bin/filter
-%{_bindir}/rnews.libexec
-%{_bindir}/auth/resolv
-%{_bindir}/auth/passwd
-%{_sysconfdir}/news
-%{perl_vendorlib}/INN/Config.pm
-/var/spool/news
 /var/spool/news/articles
 /var/spool/news/overview
 /var/spool/news/archive
@@ -361,8 +353,6 @@ fi
 /var/log/news/OLD
 %attr(770,news,news) %dir /var/lib/news
 %attr(770,news,news) %dir /var/run/news
-%{_mandir}/man5/*5*
-%{_mandir}/man8/*8*
 
 %attr(-,root,root) %doc HACKING LICENSE MANIFEST TODO
 %attr(-,root,root) %doc README* ChangeLog CONTRIBUTORS INSTALL NEWS
