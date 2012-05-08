@@ -353,7 +353,9 @@ fi
 /var/log/news/OLD
 %attr(770,news,news) %dir /var/lib/news
 %attr(770,news,news) %dir /var/run/news
-
+%{_mandir}/man5/localgroups.5.xz
+%{_mandir}/man5/nocem.ctl.5.xz
+%{_mandir}/man8/actsyncd.8.xz
 %attr(-,root,root) %doc HACKING LICENSE MANIFEST TODO
 %attr(-,root,root) %doc README* ChangeLog CONTRIBUTORS INSTALL NEWS
 %attr(-,root,root) %doc faq
