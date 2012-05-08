@@ -31,7 +31,7 @@ Patch10:	inn-redhat_build.patch
 Patch11:	inn-shared.patch
 BuildRequires:	bison
 BuildRequires:	db-devel
-BuildRequires:	e2fsprogs-devel
+BuildRequires:	ext2fs-devel
 BuildRequires:	flex
 BuildRequires:  openssl-devel
 BuildRequires:	perl-devel
