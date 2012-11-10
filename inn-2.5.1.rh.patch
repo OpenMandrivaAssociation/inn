@@ -1,0 +1,79 @@
+--- inn-2.4.1/Makefile.global.in.old	2004-12-13 13:09:57.000000000 +0100
++++ inn-2.4.1/Makefile.global.in	2004-12-13 13:57:18.826316440 +0100
+@@ -241,8 +241,8 @@
+ RNEWSMODE	= @RNEWSMODE@
+ FILEMODE	= @FILEMODE@
+ 
+-OWNER		= -o $(RUNASUSER) -g $(RUNASGROUP)
+-ROWNER		= -o $(RUNASUSER) -g $(RNEWSGROUP)
++OWNER           =
++ROWNER          =
+ 
+ INSTALL		= $(top)/support/install-sh -c
+ 
+@@ -259,17 +259,17 @@
+ 
+ BACKUP_OPTION	= -B .OLD
+ 
+-LI_SPRI		= $(LIBTOOLINST) $(INSTALL) -o root -g $(RUNASGROUP) -m 4550 $(BACKUP_OPTION)
+-LI_XPRI		= $(LIBTOOLINST) $(INSTALL) $(OWNER) -m 0550 $(BACKUP_OPTION)
+-LI_XPUB		= $(LIBTOOLINST) $(INSTALL) $(OWNER) -m 0555 $(BACKUP_OPTION)
++LI_SPRI		= $(LIBTOOLINST) $(INSTALL) -o root -g $(RUNASGROUP) -m 4750 $(BACKUP_OPTION)
++LI_XPRI		= $(LIBTOOLINST) $(INSTALL) $(OWNER) -m 0750 $(BACKUP_OPTION)
++LI_XPUB		= $(LIBTOOLINST) $(INSTALL) $(OWNER) -m 0755 $(BACKUP_OPTION)
+ 
+ LI_INEWS	= $(LIBTOOLINST) $(INSTALL) $(OWNER) -m $(INEWSMODE) $(BACKUP_OPTION)
+ LI_RNEWS	= $(LIBTOOLINST) $(INSTALL) $(ROWNER) -m $(RNEWSMODE) $(BACKUP_OPTION)
+ 
+ CP_RPRI		= $(INSTALL) $(OWNER) -m 0640 $(BACKUP_OPTION)
+ CP_RPUB		= $(INSTALL) $(OWNER) -m 0644 $(BACKUP_OPTION)
+-CP_XPRI		= $(INSTALL) $(OWNER) -m 0550 $(BACKUP_OPTION)
+-CP_XPUB		= $(INSTALL) $(OWNER) -m 0555 $(BACKUP_OPTION)
++CP_XPRI		= $(INSTALL) $(OWNER) -m 0750 $(BACKUP_OPTION)
++CP_XPUB		= $(INSTALL) $(OWNER) -m 0755 $(BACKUP_OPTION)
+ 
+ CP_DATA		= $(INSTALL) $(OWNER) -m $(FILEMODE) $(BACKUP_OPTION)
+ CP_MAN		= $(INSTALL) $(OWNER) -m 0444
+--- inn-2.4.1/Makefile.old	2004-12-13 13:09:57.000000000 +0100
++++ inn-2.4.1/Makefile	2004-12-13 14:29:56.625685696 +0100
+@@ -91,9 +91,9 @@
+ directories:
+ 	@chmod +x support/install-sh
+ 	for D in $(INSTDIRS) ; do \
+-	    support/install-sh $(OWNER) -m 0755 -d $(D)$$D ; \
++	    support/install-sh $(OWNER) -m 0755 -d $(DESTDIR)/$$D ; \
+ 	done
+-	support/install-sh $(OWNER) -m 0750 -d $(D)$(PATHRUN)
++	support/install-sh $(OWNER) -m 0750 -d $(DESTDIR)/$(PATHRUN)
+ 
+ update: 
+ 	@chmod +x support/install-sh
+--- inn-2.4.1/samples/inn.conf.in.old	2004-12-13 13:09:57.000000000 +0100
++++ inn-2.4.1/samples/inn.conf.in	2004-12-13 13:31:12.475437968 +0100
+@@ -21,7 +21,7 @@
+ organization:           "A poorly-installed InterNetNews site"
+ ovmethod:               tradindexed
+ hismethod:              hisv6
+-pathhost:               @HOSTNAME@
++#pathhost:               localhost
+ pathnews:               @prefix@
+ 
+ #runasuser:
+@@ -122,7 +122,7 @@
+ 
+ # Monitoring
+ 
+-doinnwatch:             true
++doinnwatch:             false
+ innwatchbatchspace:     4000
+ innwatchlibspace:       25000
+ innwatchloload:         1000
+@@ -157,7 +157,7 @@
+ keepmmappedthreshold:   1024
+ #maxcmdreadsize:
+ maxforks:               10
+-nicekids:               4
++nicekids:               0
+ nicenewnews:            0
+ nicennrpd:              0
+ pauseretrytime:         300

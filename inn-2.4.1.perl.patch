@@ -1,0 +1,12 @@
+--- inn-2.4.1/innd/cc.c.perl	2004-12-13 13:09:57.000000000 +0100
++++ inn-2.4.1/innd/cc.c	2004-12-13 14:41:04.692124160 +0100
+@@ -1522,6 +1522,9 @@
+ }
+ 
+ 
++/* perl.h likes to define strerror, sigh */
++#undef strerror
++
+ /*
+ **  Send a signal to a site's feed.
+ */

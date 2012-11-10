@@ -1,0 +1,92 @@
+diff -up inn-2.5.1/doc/man/rc.news.8.nologin inn-2.5.1/doc/man/rc.news.8
+--- inn-2.5.1/doc/man/rc.news.8.nologin	2009-10-12 20:24:04.000000000 +0200
++++ inn-2.5.1/doc/man/rc.news.8	2009-10-13 21:55:50.000000000 +0200
+@@ -175,20 +175,20 @@ is recommended to throttle the server fi
+ To start \s-1INN\s0 and leave certain error messages going to the terminal:
+ .PP
+ .Vb 1
+-\&       su \- news \-c <pathbin in inn.conf>/rc.news
++\&       su \- news \-c /etc/rc.news
+ .Ve
+ .PP
+ To run \s-1INN\s0 at startup time from appropriate system boot scripts:
+ .PP
+ .Vb 1
+-\&       su \- news \-c <pathbin>/rc.news >/dev/console
++\&       su \- news \-c /etc/rc.news >/dev/console
+ .Ve
+ .PP
+ To stop \s-1INN\s0 (throttling first):
+ .PP
+ .Vb 2
+ \&       <pathbin>/ctlinnd throttle reason
+-\&       su \- news \-c \*(Aq<pathbin>/rc.news stop\*(Aq
++\&       su \- news \-c \*(Aq/etc/rc.news stop\*(Aq
+ .Ve
+ .SH "BUGS"
+ .IX Header "BUGS"
+diff -up inn-2.5.1/doc/pod/install.pod.nologin inn-2.5.1/doc/pod/install.pod
+--- inn-2.5.1/doc/pod/install.pod.nologin	2009-10-12 20:24:04.000000000 +0200
++++ inn-2.5.1/doc/pod/install.pod	2009-10-13 21:53:35.000000000 +0200
+@@ -1551,7 +1551,7 @@ INN is started via the shell script B<rc
+ news user and not as root.  To start INN on system boot, you therefore
+ want to put something like:
+ 
+-    su news -c <pathbin in inn.conf>/rc.news
++    su -m news -c /etc/rc.news
+ 
+ in the system boot scripts.  If B<innd> is stopped or killed, you can restart
+ it by running B<rc.news> by hand as the news user.
+@@ -1559,7 +1559,7 @@ it by running B<rc.news> by hand as the 
+ The B<rc.news> script may also be used to shut down INN, with the C<stop>
+ option:
+ 
+-    su news -c '<pathbin in inn.conf>/rc.news stop'
++    su -m news -c '/etc/rc.news stop'
+ 
+ In the F<contrib> directory of this source tree is a sample init script
+ for people using System V-style init.d directories.
+diff -up inn-2.5.1/doc/pod/rc.news.pod.nologin inn-2.5.1/doc/pod/rc.news.pod
+--- inn-2.5.1/doc/pod/rc.news.pod.nologin	2009-10-12 20:24:04.000000000 +0200
++++ inn-2.5.1/doc/pod/rc.news.pod	2009-10-13 21:53:35.000000000 +0200
+@@ -63,16 +63,16 @@ is recommended to throttle the server fi
+ 
+ To start INN and leave certain error messages going to the terminal:
+ 
+-       su - news -c <pathbin in inn.conf>/rc.news
++       su -m news -c /etc/rc.news
+ 
+ To run INN at startup time from appropriate system boot scripts:
+ 
+-       su - news -c <pathbin>/rc.news >/dev/console
++       su -m news -c /etc/rc.news >/dev/console
+ 
+ To stop INN (throttling first):
+ 
+        <pathbin>/ctlinnd throttle reason
+-       su - news -c '<pathbin>/rc.news stop'
++       su -m news -c '/etc/rc.news stop'
+ 
+ =head1 BUGS
+ 
+diff -up inn-2.5.1/INSTALL.nologin inn-2.5.1/INSTALL
+--- inn-2.5.1/INSTALL.nologin	2009-10-12 20:24:04.000000000 +0200
++++ inn-2.5.1/INSTALL	2009-10-13 21:53:35.000000000 +0200
+@@ -1511,7 +1511,7 @@ Starting and Stopping the System
+     news user and not as root.  To start INN on system boot, you therefore
+     want to put something like:
+ 
+-        su news -c <pathbin in inn.conf>/rc.news
++        su -m news -c /etc/rc.news
+ 
+     in the system boot scripts.  If innd is stopped or killed, you can
+     restart it by running rc.news by hand as the news user.
+@@ -1519,7 +1519,7 @@ Starting and Stopping the System
+     The rc.news script may also be used to shut down INN, with the "stop"
+     option:
+ 
+-        su news -c '<pathbin in inn.conf>/rc.news stop'
++        su -m news -c '/etc/rc.news stop'
+ 
+     In the contrib directory of this source tree is a sample init script for
+     people using System V-style init.d directories.
