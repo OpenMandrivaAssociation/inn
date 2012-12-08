@@ -1,0 +1,12 @@
+diff -up inn-2.5.3/innfeed/configfile.l.lex inn-2.5.3/innfeed/configfile.l
+--- inn-2.5.3/innfeed/configfile.l.lex	2012-09-11 14:29:00.473000388 +0200
++++ inn-2.5.3/innfeed/configfile.l	2012-09-11 14:29:40.108999869 +0200
+@@ -36,7 +36,7 @@ static void yyunput(int, char *) UNUSED;
+ int yyget_lineno(void);
+ FILE *yyget_in(void);
+ FILE *yyget_out(void);
+-int yyget_leng(void);
++// int yyget_leng(void);
+ char *yyget_text(void);
+ int yyget_debug(void);
+ void yyset_lineno(int);

@@ -1,7 +1,7 @@
 diff -up inn-2.5.1/storage/buffindexed/ovmethod.mk.shared inn-2.5.1/storage/buffindexed/ovmethod.mk
 --- inn-2.5.1/storage/buffindexed/ovmethod.mk.shared	2009-12-01 16:50:37.174811272 +0100
 +++ inn-2.5.1/storage/buffindexed/ovmethod.mk	2009-12-01 16:53:24.914809560 +0100
-@@ -1,9 +1,9 @@
+@@ -1,8 +1,8 @@
  # This rule requires a compiler that supports -o with -c.  Since it's normally
  # used by developers, that should be acceptable.
 -buffindexed/buffindexed_d.o: buffindexed/buffindexed.c
@@ -11,10 +11,8 @@ diff -up inn-2.5.1/storage/buffindexed/ovmethod.mk.shared inn-2.5.1/storage/buff
  
 -buffindexed/buffindexed_d: buffindexed/buffindexed_d.o libstorage.$(EXTLIB) $(LIBHIST)
 -	$(LIBLD) $(LDFLAGS) -o $@ buffindexed/buffindexed_d.o \
--	    buffindexed/shmem.o expire.o ov.o \
 +buffindexed/buffindexed_d: buffindexed/buffindexed_d.$(EXTOBJ) libstorage.$(EXTLIB) $(LIBHIST)
 +	$(LIBLD) $(LDFLAGS) -o $@ buffindexed/buffindexed_d.$(EXTOBJ) \
-+	    buffindexed/shmem.$(EXTOBJ) expire.$(EXTOBJ) ov.$(EXTOBJ) \
  	    $(LIBSTORAGE) $(LIBHIST) $(LIBINN) $(STORAGE_LIBS) $(LIBS)
 diff -up inn-2.5.1/storage/tradindexed/ovmethod.mk.shared inn-2.5.1/storage/tradindexed/ovmethod.mk
 --- inn-2.5.1/storage/tradindexed/ovmethod.mk.shared	2009-12-01 16:53:35.644811390 +0100

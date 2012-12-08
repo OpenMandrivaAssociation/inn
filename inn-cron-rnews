@@ -1,0 +1,2 @@
+#!/bin/sh
+! /sbin/chkconfig innd || /usr/bin/rnews -U

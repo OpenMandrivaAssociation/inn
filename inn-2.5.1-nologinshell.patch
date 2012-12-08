@@ -44,8 +44,8 @@ diff -up inn-2.5.1/doc/pod/install.pod.nologin inn-2.5.1/doc/pod/install.pod
 -    su news -c '<pathbin in inn.conf>/rc.news stop'
 +    su -m news -c '/etc/rc.news stop'
  
- In the F<contrib> directory of this source tree is a sample init script
- for people using System V-style init.d directories.
+ In the F<contrib> directory of this source tree, two sample init scripts are provided:  one
+ for people using System V-style init.d directories, and another for people
 diff -up inn-2.5.1/doc/pod/rc.news.pod.nologin inn-2.5.1/doc/pod/rc.news.pod
 --- inn-2.5.1/doc/pod/rc.news.pod.nologin	2009-10-12 20:24:04.000000000 +0200
 +++ inn-2.5.1/doc/pod/rc.news.pod	2009-10-13 21:53:35.000000000 +0200
@@ -69,24 +69,3 @@ diff -up inn-2.5.1/doc/pod/rc.news.pod.nologin inn-2.5.1/doc/pod/rc.news.pod
  
  =head1 BUGS
  
-diff -up inn-2.5.1/INSTALL.nologin inn-2.5.1/INSTALL
---- inn-2.5.1/INSTALL.nologin	2009-10-12 20:24:04.000000000 +0200
-+++ inn-2.5.1/INSTALL	2009-10-13 21:53:35.000000000 +0200
-@@ -1511,7 +1511,7 @@ Starting and Stopping the System
-     news user and not as root.  To start INN on system boot, you therefore
-     want to put something like:
- 
--        su news -c <pathbin in inn.conf>/rc.news
-+        su -m news -c /etc/rc.news
- 
-     in the system boot scripts.  If innd is stopped or killed, you can
-     restart it by running rc.news by hand as the news user.
-@@ -1519,7 +1519,7 @@ Starting and Stopping the System
-     The rc.news script may also be used to shut down INN, with the "stop"
-     option:
- 
--        su news -c '<pathbin in inn.conf>/rc.news stop'
-+        su -m news -c '/etc/rc.news stop'
- 
-     In the contrib directory of this source tree is a sample init script for
-     people using System V-style init.d directories.

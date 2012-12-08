@@ -1,11 +1,3 @@
 sources:
-  "inn-2.5.1.tar.gz:"	e49a58a3484bbb7fd230b37ca17cc34eb10c10f1
-  "inn-cron-expire:"	82fbaaf82a1638fea47d18c9b59e3ed8289efa42
-  "inn-cron-nntpsend:"	76074a23d654849d8478396860d852c6ab93f99b
-  "inn-cron-rnews:"	3c2faab2b6aafcb667608873b6ad489dd1da602e
-  "inn-default-active:"	4b7db78a253070b19edeb03b48762bdaee762f2c
-  "inn-default-distributions:"	af706ed5f7e916a02993c2575d87fbf4e2a0e01e
-  "inn-default-newsgroups:"	fbb70f5e7607b6871d7e7a7d786a56476466587c
-  "innd.init:"	4f317213334cf5481078df65f9d2f2a2f9d91a55
-  "inn-etc-nnrp.access:"	f5eff4476343f79d04873901027943a6fe0c2141
-  "inn-faq.tar.bz2:"	b5399039959fe6e1300e9546f3cf4409245241bb
+  "inn-2.5.3.tar.gz": 98f22ef02e48c28f5eb931ce506ebe99557dc46e
+  "inn-faq.tar.bz2": b5399039959fe6e1300e9546f3cf4409245241bb

@@ -51,29 +51,29 @@
 --- inn-2.4.1/samples/inn.conf.in.old	2004-12-13 13:09:57.000000000 +0100
 +++ inn-2.4.1/samples/inn.conf.in	2004-12-13 13:31:12.475437968 +0100
 @@ -21,7 +21,7 @@
- organization:           "A poorly-installed InterNetNews site"
- ovmethod:               tradindexed
- hismethod:              hisv6
--pathhost:               @HOSTNAME@
-+#pathhost:               localhost
- pathnews:               @prefix@
+ organization:                "A poorly-installed InterNetNews site"
+ ovmethod:                    tradindexed
+ hismethod:                   hisv6
+-pathhost:                    @HOSTNAME@
++#pathhost:                    localhost
+ pathnews:                    @prefix@
  
  #runasuser:
 @@ -122,7 +122,7 @@
  
  # Monitoring
  
--doinnwatch:             true
-+doinnwatch:             false
- innwatchbatchspace:     4000
- innwatchlibspace:       25000
- innwatchloload:         1000
+-doinnwatch:                  true
++doinnwatch:                  false
+ innwatchbatchspace:          4000
+ innwatchlibspace:            25000
+ innwatchloload:              1000
 @@ -157,7 +157,7 @@
- keepmmappedthreshold:   1024
+ keepmmappedthreshold:        1024
  #maxcmdreadsize:
- maxforks:               10
--nicekids:               4
-+nicekids:               0
- nicenewnews:            0
- nicennrpd:              0
- pauseretrytime:         300
+ maxforks:                    10
+-nicekids:                    4
++nicekids:                    0
+ nicenewnews:                 0
+ nicennrpd:                   0
+ pauseretrytime:              300
