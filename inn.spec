@@ -12,8 +12,8 @@ Version:	2.5.3
 Release:	2
 License:	GPLv2+
 Group:		System/Servers
-URL:		http://www.isc.org/products/INN/
-Source0:	ftp://ftp.isc.org/isc/inn/inn-%{version}.tar.gz
+Url:		http://www.isc.org/products/INN/
+Source0:	ftp://ftp.isc.org/isc/inn/%{name}-%{version}.tar.gz
 Source1:	inn-default-active
 Source2:	inn-default-distributions
 Source3:	inn-default-newsgroups
@@ -36,19 +36,24 @@ Patch10:	inn-redhat_build.patch
 Patch11:	inn-shared.patch
 Patch12:	inn-2.5.2-smp.patch
 Patch13:	inn-2.5.3-flex.patch
-BuildRequires:	autoconf automake libtool
+
 BuildRequires:	bison
-BuildRequires:	db-devel
-BuildRequires:	ext2fs-devel
 BuildRequires:	flex
-BuildRequires:	openssl-devel
-BuildRequires:	perl-devel
+BuildRequires:	libtool
+BuildRequires:	db-devel
 BuildRequires:	krb5-devel
 BuildRequires:	pam-devel
-Requires(pre):	chkconfig grep coreutils sed rpm-helper
-Requires:	cleanfeed, perl = %{perl_version}
+BuildRequires:	perl-devel
+BuildRequires:	pkgconfig(ext2fs)
+BuildRequires:	pkgconfig(openssl)
+Requires(pre):	chkconfig
+Requires(pre):	coreutils
+Requires(pre):	grep
+Requires(pre):	sed
+Requires(pre):	rpm-helper
+Requires:	cleanfeed
+Requires:	perl = %{perl_version}
 Requires:	sendmail-command
-Conflicts:	echelog jabber2
 
 %description
 INN (InterNetNews) is a complete system for serving Usenet news and/or
@@ -92,36 +97,19 @@ news servers.
 
 %prep
 %setup -q -a 10
-%patch0 -p1 -b .rh
-%patch1 -p1 -b .perl
-%patch2 -p1 -b .pie
-%patch3 -p1 -b .posix
-%patch4 -p1 -b .warn
-%patch5 -p1 -b .makedbz
-%patch8 -p1 -b .nologin
-%patch9 -p1 -b .chown
-%patch10 -p1 -b .redhat_build
-%patch11 -p1 -b .shared
-%patch12 -p1 -b .smp
-%patch13 -p1 -b .lex
-
-#rm -f configure; autoconf-2.13
+%apply_patches
 
 find -type f | xargs perl -pi -e '@meuh = qw(LOCK_READ LOCK_WRITE LOCK_UNLOCK); foreach $a (@meuh) { s/\b$a\b/INN_$a/g }'
-
 # lib64 fix
-perl -pi -e "s|/lib\b|/%{_lib}|g" m4/*.m4 configure*
+sed -i -e "s|/lib\b|/%{_lib}|g" m4/*.m4 configure*
+autoreconf -fi
 
 %build
 %serverbuild
 export CFLAGS="$CFLAGS -DHAVE_ET_COM_ERR_H -fPIC"
 
-#rm -f config.cache
-#libtoolize --copy --force
-
-autoreconf -fi
-
-%configure2_5x --prefix=/usr  \
+%configure2_5x \
+	--prefix=/usr  \
 	--libdir=%{_libdir} \
 	--with-lib-dir=%{_libdir}/%{name} \
 	--with-filter-dir=%{_libdir}/news/bin/filter \
@@ -145,15 +133,13 @@ autoreconf -fi
 %make
 
 %install
-rm -rf %{buildroot}
-
 mkdir -p %{buildroot}
-perl -pi -e 's/^OWNER.*/OWNER = /; s/^ROWNER.*/ROWNER = /' Makefile.global
+sed -i -e 's/^OWNER.*/OWNER = /; s/^ROWNER.*/ROWNER = /' Makefile.global
 
 TMP_UID="`id -un`"
 TMP_GID="`id -gn`"
-perl -pi -e "s|^NEWSUSER.*|NEWSUSER=${TMP_UID}|g" Makefile.global
-perl -pi -e "s|^NEWSGROUP.*|NEWSGROUP=${TMP_GID}|g" Makefile.global
+sed -i -e "s|^NEWSUSER.*|NEWSUSER=${TMP_UID}|g" Makefile.global
+sed -i -e "s|^NEWSGROUP.*|NEWSGROUP=${TMP_GID}|g" Makefile.global
 
 %makeinstall_std
 
@@ -167,10 +153,8 @@ done
 mkdir -p %{buildroot}/etc
 mv %{buildroot}/usr/bin/rc.news %{buildroot}/etc
 
-perl -pi -e 's|%{_libdir}/inn/news/innshellvars|%{_bindir}/innshellvars|' %{buildroot}/etc/rc.news
+sed -i -e 's|%{_libdir}/inn/news/innshellvars|%{_bindir}/innshellvars|' %{buildroot}/etc/rc.news
 chmod 755 %{buildroot}/etc/rc.news
-
-
 
 touch %{buildroot}/var/lib/news/subscriptions
 chmod 644 %{buildroot}/var/lib/news/subscriptions
@@ -237,10 +221,6 @@ chmod u+w %{buildroot}/%{_bindir}/auth/resolv/*
 chmod u+w %{buildroot}/%{_bindir}/auth/passwd/*
 chmod u+w %{buildroot}/%{_bindir}/rnews.libexec/*
 
-%clean
-rm -rf %{buildroot}
-rm -f files.list files.main files.devel files.inews
-
 %post
 %_post_service innd
 
@@ -285,7 +265,7 @@ fi
 %triggerin -- sysklogd
 if [ -f /etc/syslog.conf ]; then
   if grep -q "# News logging" /etc/syslog.conf; then
-perl -pi -e "s!mail.none;authpriv.none!mail.none;news.none;authpriv.none!; \
+sed -i -e "s!mail.none;authpriv.none!mail.none;news.none;authpriv.none!; \
 	     s!/var/log/news/info!/var/log/news/news.notice!; \
 	     s!/var/log/news/errors!/var/log/news/news.err!; \
 	     s!/var/log/news/warnings!/var/log/news/news.crit!; \
