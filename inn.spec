@@ -9,7 +9,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.5.3
-Release:	9
+Release:	10
 License:	GPLv2+
 Group:		System/Servers
 Url:		http://www.isc.org/products/INN/
@@ -36,6 +36,8 @@ Patch10:	inn-redhat_build.patch
 Patch11:	inn-shared.patch
 Patch12:	inn-2.5.2-smp.patch
 Patch13:	inn-2.5.3-flex.patch
+Patch14:	inn-2.5.3-pod2man.patch
+Patch15:	inn-2.5.3.actsync.pod.patch
 
 BuildRequires:	bison
 BuildRequires:	flex

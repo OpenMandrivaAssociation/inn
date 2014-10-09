@@ -1,0 +1,27 @@
+diff -uNr inn-2.5.3/control/pgpverify.in inn-2.5.3p/control/pgpverify.in
+--- inn-2.5.3/control/pgpverify.in	2012-06-15 21:25:36.000000000 +0300
++++ inn-2.5.3p/control/pgpverify.in	2013-06-01 15:21:47.752498366 +0300
+@@ -738,19 +738,19 @@
+ 
+ The control message had a good PGP signature.
+ 
+-=item 1
++=item Z<>1
+ 
+ The control message had no PGP signature.
+ 
+-=item 2
++=item Z<>2
+ 
+ The control message had an unknown PGP signature.
+ 
+-=item 3
++=item Z<>3
+ 
+ The control message had a bad PGP signature.
+ 
+-=item 255
++=item Z<>255
+ 
+ A problem occurred not directly related to PGP analysis of signature.
+ 
