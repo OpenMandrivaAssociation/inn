@@ -1,5 +1,3 @@
-%define perl_version %(rpm -q --qf '%%{epoch}:%%{VERSION}' perl)
-
 %if %{_use_internal_dependency_generator}
 %define __noautoreq 'perl\\(bigint.pl\\)|perl\\(ftp.pl\\)'
 %else
@@ -9,7 +7,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.5.3
-Release:	10
+Release:	11
 License:	GPLv2+
 Group:		System/Servers
 Url:		http://www.isc.org/products/INN/
@@ -54,7 +52,7 @@ Requires(pre):	grep
 Requires(pre):	sed
 Requires(pre):	rpm-helper
 Requires:	cleanfeed
-Requires:	perl = %{perl_version}
+Requires:	perl
 Requires:	sendmail-command
 
 %description
