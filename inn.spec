@@ -6,8 +6,8 @@
 
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
-Version:	2.5.3
-Release:	14
+Version:	2.5.4
+Release:	1
 License:	GPLv2+
 Group:		System/Servers
 Url:		http://www.isc.org/products/INN/
@@ -28,14 +28,13 @@ Patch2:		inn-2.5.1.pie.patch
 Patch3:		inn-2.5.2.posix.patch
 Patch4:		inn-2.5.1.warn.patch
 Patch5:		inn-2.5.1-makedbz.patch
-Patch8:		inn-2.5.1-nologinshell.patch
+#Patch8:		inn-2.5.1-nologinshell.patch
 Patch9:		inn-2.5.0-chown.patch
 Patch10:	inn-redhat_build.patch
 Patch11:	inn-shared.patch
-Patch12:	inn-2.5.2-smp.patch
-Patch13:	inn-2.5.3-flex.patch
-Patch14:	inn-2.5.3-pod2man.patch
-Patch15:	inn-2.5.3.actsync.pod.patch
+#Patch12:	inn-2.5.2-smp.patch
+#Patch13:	inn-2.5.3-flex.patch
+#Patch14:	inn-2.5.3-pod2man.patch
 
 BuildRequires:	bison
 BuildRequires:	flex
@@ -141,7 +140,7 @@ TMP_GID="`id -gn`"
 sed -i -e "s|^NEWSUSER.*|NEWSUSER=${TMP_UID}|g" Makefile.global
 sed -i -e "s|^NEWSGROUP.*|NEWSGROUP=${TMP_GID}|g" Makefile.global
 
-%makeinstall_std
+make install DESTDIR=%buildroot
 
 # -- Install man pages needed by suck et al.
 mkdir -p %{buildroot}%{_includedir}/inn
@@ -220,6 +219,8 @@ chmod u+w %{buildroot}/%{_bindir}/*
 chmod u+w %{buildroot}/%{_bindir}/auth/resolv/*
 chmod u+w %{buildroot}/%{_bindir}/auth/passwd/*
 chmod u+w %{buildroot}/%{_bindir}/rnews.libexec/*
+
+chmod +x %{buildroot}/var/lib/news/http
 
 %post
 %_post_service innd
@@ -322,7 +323,8 @@ fi
 %attr(-,root,root) %doc doc/sample-control doc/GPL doc/history
 
 %defattr(755,root,root)
-%{_prefix}/com/news/http/innreport.css
+%dir /var/lib/news/http
+/var/lib/news/http/innreport.css
 
 %dir %{_libdir}/news/bin/control
 %dir %{_libdir}/news/bin/filter
@@ -457,8 +459,8 @@ fi
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/innwatch.ctl
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/localgroups
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/moderators
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/motd.innd
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/motd.nnrpd
+%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/motd.innd.sample
+%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/motd.nnrpd.sample
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/news2mail.cf
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/newsfeeds
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/nnrp.access
@@ -467,7 +469,7 @@ fi
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/nocem.ctl
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/ovdb.conf
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/passwd.nntp
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/radius.conf
+%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/inn-radius.conf
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/readers.conf
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/send-uucp.cf
 %attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/storage.conf
@@ -524,7 +526,7 @@ fi
 %attr(644,root,root) %{_mandir}/man5/nocem.ctl.5*
 %attr(644,root,root) %{_mandir}/man5/ovdb.5*
 %attr(644,root,root) %{_mandir}/man5/passwd.nntp.5*
-%attr(644,root,root) %{_mandir}/man5/radius.conf.5*
+%attr(644,root,root) %{_mandir}/man5/inn-radius.conf.5*
 %attr(644,root,root) %{_mandir}/man5/readers.conf.5*
 %attr(644,root,root) %{_mandir}/man5/storage.conf.5*
 %attr(644,root,root) %{_mandir}/man5/subscriptions.5*
