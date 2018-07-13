@@ -36,6 +36,7 @@ Patch11:	inn-shared.patch
 #Patch13:	inn-2.5.3-flex.patch
 #Patch14:	inn-2.5.3-pod2man.patch
 
+BuildRequires:	perl(ExtUtils::Embed)
 BuildRequires:	bison
 BuildRequires:	flex
 BuildRequires:	libtool
