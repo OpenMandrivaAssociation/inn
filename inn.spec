@@ -33,6 +33,7 @@ Patch14:	inn-redhat_build.patch
 Patch17:	inn-2.5.2-pconf.patch
 Patch18:	inn-2.6.1-parallel-buildfix.patch
 BuildRequires:	bison
+BuildRequires:	perl-ExtUtils-Embed	
 BuildRequires:	db-devel
 BuildRequires:	flex
 BuildRequires:	pkgconfig(openssl) >= 1.1
