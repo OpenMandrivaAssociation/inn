@@ -1,84 +1,96 @@
-%if %{_use_internal_dependency_generator}
-%define __noautoreq 'perl\\(bigint.pl\\)|perl\\(ftp.pl\\)'
-%else
-%define _requires_exceptions perl(bigint.pl)\\|perl(ftp.pl)
-%endif
+%define _disable_ld_no_undefined 1
+
+%define major	6
+%define major_h	3
+%define major_s	3
+%define libname	%mklibname %{name} %{major}
+%define libhist	%mklibname %{name}hist %{major_h}
+%define libsto	%mklibname storage %{major_s}
+%define devname	%mklibname %{name} -d
 
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
-Version:	2.5.4
-Release:	2
+Version:	2.6.3
+Release:	%mkrel 1
 License:	GPLv2+
 Group:		System/Servers
-Url:		http://www.isc.org/products/INN/
-Source0:	ftp://ftp.isc.org/isc/inn/%{name}-%{version}.tar.gz
-Source1:	inn-default-active
+URL:		https://www.isc.org/downloads/projects/
+Source0:	ftp://ftp.isc.org/isc/inn/inn-%{version}.tar.gz
 Source2:	inn-default-distributions
-Source3:	inn-default-newsgroups
-Source4:	inn-cron-expire
-Source5:	inn-cron-rnews
-Source6:	inn-etc-nnrp.access
-Source7:	inn-cron-nntpsend
-Source8:	innd.init
-Source10:	inn-faq.tar.bz2
-Source20:	%{name}.rpmlintrc
-Patch0:		inn-2.4.3.rh.patch
-Patch1:		inn-2.4.1.perl.patch
-Patch2:		inn-2.5.1.pie.patch
-Patch3:		inn-2.5.2.posix.patch
-Patch4:		inn-2.5.1.warn.patch
-Patch5:		inn-2.5.1-makedbz.patch
-#Patch8:		inn-2.5.1-nologinshell.patch
-Patch9:		inn-2.5.0-chown.patch
-Patch10:	inn-redhat_build.patch
-Patch11:	inn-shared.patch
-#Patch12:	inn-2.5.2-smp.patch
-#Patch13:	inn-2.5.3-flex.patch
-#Patch14:	inn-2.5.3-pod2man.patch
-
-BuildRequires:	perl(ExtUtils::Embed)
+Source10:	http://www.eyrie.org/~eagle/faqs/inn.html
+Source11:	inn-tmpfiles.conf
+Source20:	innd.service
+Source21:	innd-expire.service
+Source22:	innd-expire.timer
+Source23:	innd-nntpsend.service
+Source24:	innd-nntpsend.timer
+Source25:	innd-rnews.service
+Source26:	innd-rnews.timer
+Patch1:		inn-2.6.0-rh.patch
+Patch6:		inn-2.5.2.posix.patch
+Patch7:		inn-2.4.3.warn.patch
+Patch14:	inn-redhat_build.patch
+Patch17:	inn-2.5.2-pconf.patch
+Patch18:	inn-2.6.1-parallel-buildfix.patch
 BuildRequires:	bison
-BuildRequires:	flex
-BuildRequires:	libtool
 BuildRequires:	db-devel
-BuildRequires:	krb5-devel
-BuildRequires:	pam-devel
+BuildRequires:	flex
+BuildRequires:	pkgconfig(openssl) >= 1.1
 BuildRequires:	perl-devel
-BuildRequires:	pkgconfig(ext2fs)
-BuildRequires:	pkgconfig(openssl)
-Requires(pre):	chkconfig
-Requires(pre):	coreutils
-Requires(pre):	grep
-Requires(pre):	sed
-Requires(pre):	rpm-helper
+BuildRequires:	pkgconfig(krb5)
+BuildRequires:	pam-devel
+BuildRequires:	pkgconfig(com_err)
+Requires(pre):	chkconfig grep coreutils sed rpm-helper
 Requires:	cleanfeed
-Requires:	perl
 Requires:	sendmail-command
+Requires(post): systemd >= %{systemd_required_version}
+
+%global __requires_exclude perl\\(bigint.pl\\)|perl\\(ftp.pl\\)
 
 %description
 INN (InterNetNews) is a complete system for serving Usenet news and/or
 private newsfeeds.  INN includes innd, an NNTP (NetNews Transport
-Protocol) server, and nnrpd, a newsreader that is spawned for each client. 
-Both innd and nnrpd vary slightly from the NNTP protocol, but not in ways
-that are easily noticed.
+Protocol) server, and nnrpd, a newsreader that is spawned for each
+client.  Both innd and nnrpd vary slightly from the NNTP protocol, but
+not in ways that are easily noticed.
 
 Install the inn package if you need a complete system for serving and
-reading Usenet news.  You may also need to install inn-devel, if you are
-going to use a separate program which interfaces to INN, like newsgate or
-tin.
+reading Usenet news.  You may also need to install inn-devel, if you
+are going to use a separate program which interfaces to INN, like
+newsgate or tin.
 
-%package	devel
-Summary:	The INN (InterNetNews) library
-Group:		Development/C
-Requires:	inn = %{version}
+%package -n	%{libname}
+Summary:	Runtime Library needed by %{name}
+Group:		System/Libraries
 
-%description	devel
-The inn-devel package contains the INN (InterNetNews) library, which
-several programs that interface with INN need in order to work (for
-example, newsgate and tin).
+%description -n	%{libname}
+Runtime librairy for %{name}.
 
-If you are installing a program which must interface with the INN
-news system, you should install inn-devel.
+%package -n	%{libhist}
+Summary:	Runtime Library needed by %{name}
+Group:		System/Libraries
+
+%description -n	%{libhist}
+Runtime librairy for %{name}.
+
+%package -n	%{libsto}
+Summary:	Runtime Library needed by %{name}
+Group:		System/Libraries
+
+%description -n	%{libsto}
+Runtime librairy for %{name}.
+
+%package -n	%{devname}
+Summary:	Developements headers for %{name}
+Group:		Development/C++
+Requires:	%{libname} = %{version}-%{release}
+Requires:	%{libhist} = %{version}-%{release}
+Requires:	%{libsto} = %{version}-%{release}
+Provides:	%{name}-devel = %{version}-%{release}
+Provides:	lib%{name}-devel = %{version}-%{release}
+
+%description -n	%{devname}
+Headers files to build packages against %{name}.
 
 %package -n	inews
 Summary:	Sends Usenet articles to a local news server for distribution
@@ -87,143 +99,143 @@ Conflicts:	noffle
 
 %description -n	inews
 The inews program is used by some news programs (for example, inn and
-trn) to post Usenet news articles to local news servers.  Inews reads an
-article from a file or standard input, adds headers, performs some
+trn) to post Usenet news articles to local news servers.  Inews reads
+an article from a file or standard input, adds headers, performs some
 consistency checks and then sends the article to the local news server
 specified in the inn.conf file.
 
-Install inews if you need a program for posting Usenet articles to local
-news servers.
+Install inews if you need a program for posting Usenet articles to
+local news servers.
 
 %prep
-%setup -q -a 10
-%apply_patches
-
-find -type f | xargs perl -pi -e '@meuh = qw(LOCK_READ LOCK_WRITE LOCK_UNLOCK); foreach $a (@meuh) { s/\b$a\b/INN_$a/g }'
-# lib64 fix
-sed -i -e "s|/lib\b|/%{_lib}|g" m4/*.m4 configure*
-autoreconf -fi
+%setup -q
+%autopatch -p 1
 
 %build
 %serverbuild
-export CFLAGS="$CFLAGS -DHAVE_ET_COM_ERR_H -fPIC"
 
-%configure2_5x \
-	--prefix=/usr  \
-	--libdir=%{_libdir} \
-	--with-lib-dir=%{_libdir}/%{name} \
-	--with-filter-dir=%{_libdir}/news/bin/filter \
-	--with-control-dir=%{_libdir}/news/bin/control \
-	--sysconfdir=/etc/news \
-	--mandir=%{_mandir} \
-	--libexecdir=%{_libdir}/%{name} \
+%configure \
+	--sysconfdir=%{_sysconfdir}/news \
+	--bindir=%{_libexecdir}/news \
+	--exec-prefix=%{_libexecdir}/news \
 	--with-log-dir=/var/log/news --with-spool-dir=/var/spool/news\
-	--with-db-dir=/var/lib/news --with-run-dir=/var/run/news \
-	--with-etc-dir=/etc/news --with-tmp-path=/var/spool/news/tmp \
+	--with-tmp-dir=%{_sharedstatedir}/news/tmp \
+	--with-db-dir=/var/lib/news --with-run-dir=/run/news \
 	--with-perl --enable-shared --disable-static \
-	--enable-tagged-hash --enable-merge-to-groups \
-	--enable-ipv6 --with-libperl-dir=%{perl_vendorlib} \
+	--enable-tagged-hash \
+	--with-libperl-dir=%{perl_vendorlib} \
 	--with-news-user=news --with-news-group=news \
-	--with-news-master=news --enable-pgp-verify \
+	--with-news-master=news \
 	--with-openssl \
 	--with-sendmail=/usr/sbin/sendmail \
-	--with-berkeleydb=%{_prefix} \
-	--with-http-dir=%{_sharedstatedir}/news/http
+	--with-http-dir=%{_sharedstatedir}/news/http \
+	--with-pic
 
-%make
+%__make
 
 %install
-mkdir -p %{buildroot}
-sed -i -e 's/^OWNER.*/OWNER = /; s/^ROWNER.*/ROWNER = /' Makefile.global
-
-TMP_UID="`id -un`"
-TMP_GID="`id -gn`"
-sed -i -e "s|^NEWSUSER.*|NEWSUSER=${TMP_UID}|g" Makefile.global
-sed -i -e "s|^NEWSGROUP.*|NEWSGROUP=${TMP_GID}|g" Makefile.global
-
-make install DESTDIR=%buildroot
+mkdir -p %{buildroot}%{_libdir}
+mkdir -p %{buildroot}%{_sharedstatedir}/news/http
+make install DESTDIR=$RPM_BUILD_ROOT
 
 # -- Install man pages needed by suck et al.
 mkdir -p %{buildroot}%{_includedir}/inn
 for f in clibrary.h config.h
 do
-    install -c -m 0644 ./include/$f %{buildroot}%{_includedir}/inn
+    install -p -m 0644 ./include/$f %{buildroot}%{_includedir}/inn
+done
+for f in defines.h system.h libinn.h storage.h options.h dbz.h
+do
+    install -p -m 0644 ./include/inn/$f %{buildroot}%{_includedir}/inn
 done
 
-mkdir -p %{buildroot}/etc
-mv %{buildroot}/usr/bin/rc.news %{buildroot}/etc
+touch %{buildroot}%{_sharedstatedir}/news/history
+touch %{buildroot}%{_sharedstatedir}/news/subscriptions
+chmod 644 %{buildroot}%{_sharedstatedir}/news/subscriptions
 
-sed -i -e 's|%{_libdir}/inn/news/innshellvars|%{_bindir}/innshellvars|' %{buildroot}/etc/rc.news
-chmod 755 %{buildroot}/etc/rc.news
+install -m 644 %{SOURCE2} %{buildroot}%{_sharedstatedir}/news/distributions
 
-touch %{buildroot}/var/lib/news/subscriptions
-chmod 644 %{buildroot}/var/lib/news/subscriptions
+mkdir -p %{buildroot}%{_unitdir}
+install -p -m 0644 %{SOURCE20} %{buildroot}%{_unitdir}
+install -p -m 0644 %{SOURCE21} %{buildroot}%{_unitdir}
+install -p -m 0644 %{SOURCE22} %{buildroot}%{_unitdir}
+install -p -m 0644 %{SOURCE23} %{buildroot}%{_unitdir}
+install -p -m 0644 %{SOURCE24} %{buildroot}%{_unitdir}
+install -p -m 0644 %{SOURCE25} %{buildroot}%{_unitdir}
+install -p -m 0644 %{SOURCE26} %{buildroot}%{_unitdir}
 
-install -m 644 %{SOURCE1} \
-        %{buildroot}/var/lib/news/active
-install -m 644 %{SOURCE2} \
-        %{buildroot}/var/lib/news/distributions
-install -m 644 %{SOURCE3} \
-        %{buildroot}/var/lib/news/newsgroups
+cp -p %{SOURCE10} FAQ.html
 
-mkdir -p %{buildroot}/etc/cron.hourly %{buildroot}/etc/cron.daily
-install -m755 %{SOURCE4} \
-        %{buildroot}/etc/cron.daily/inn-cron-expire
-install -m755 %{SOURCE5} \
-        %{buildroot}/etc/cron.hourly/inn-cron-rnews
-install -m755 %{SOURCE7} \
-        %{buildroot}/etc/cron.hourly/inn-cron-nntpsend
-
-install -m440 %{SOURCE6} \
-        %{buildroot}/etc/news/nnrp.access
-
-mkdir -p %{buildroot}/etc/rc.d/init.d/
-install -m 755 %{SOURCE8} \
-	%{buildroot}/etc/rc.d/init.d/innd
-
-rm -f %{buildroot}/var/lib/news/history
-touch %{buildroot}/var/lib/news/history
-touch %{buildroot}/var/lib/news/.news.daily
-LD_LIBRARY_PATH=%{buildroot}%{_libdir} %{buildroot}/usr/bin/makehistory \
-	-a %{buildroot}/var/lib/news/active \
-	-r -f %{buildroot}/var/lib/news/history || :
-chmod 644 %{buildroot}/var/lib/news/*
-chmod 644 %{buildroot}/var/lib/news/.news.daily
-
-mkdir -p %{buildroot}/var/spool/news/tmp
-
-# we get this from cleanfeed
-# (sb) true - but it's not being found by innd - fix this
-rm -f %{buildroot}/%{_libdir}/news/bin/filter/filter_innd.pl
-pushd %{buildroot}/%{_libdir}/news/bin/filter
-ln -sf ../control/filter_innd.pl . 
-popd
-
-# fix location of real library files
-#mv %{buildroot}%{_libdir}/{inn/lib{inn,storage}.a,/}
+cat > %{buildroot}%{_sysconfdir}/news/.profile <<EOF
+PATH=/bin:%{_bindir}:%{_libexecdir}/news
+export PATH
+EOF
 
 #Fix perms in sample directory to avoid bogus dependencies
 find samples -name "*.in" -exec chmod a-x {} \;
+
+# we get this from cleanfeed
+rm -f %{buildroot}%{_libexecdir}/news/filter/filter_innd.pl
+
+mkdir -p %{buildroot}%{_bindir}
+ln -sf %{_libexecdir}/news/inews %{buildroot}%{_bindir}/inews
+ln -sf %{_libexecdir}/news/rnews %{buildroot}%{_bindir}/rnews
+
+# fix debuginfo extraction, permissions are set in files section, anyway
+chmod u+w %{buildroot}%{_libdir}/lib{inn{,hist},storage}.so.*
+pushd %{buildroot}%{_libexecdir}/news
+chmod u+w \
+          actsync \
+          archive \
+          auth/passwd/{auth_krb5,ckpasswd,radius} \
+          auth/resolv/{domain,ident} \
+          batcher \
+          {buff,file,over}chan \
+          buffindexed_d \
+          convdate \
+          ctlinnd \
+          cvtbatch \
+          expire{,over} \
+          fastrm \
+          getlist \
+          {grep,make,prune}history \
+          imapfeed \
+          inews \
+          inn{bind,confval,d,df,feed,xbatch,xmit} \
+          makedbz \
+          ninpaths \
+          nnrpd \
+          nntpget \
+          ovdb_{init,monitor,server,stat} \
+          rnews{,.libexec/{de,en}code} \
+          shlock \
+          shrinkfile \
+          sm \
+          tdx-util \
+          tinyleaf
+popd
 
 # (sb) doc install conflicts with rpm %%doc, even when config is setup
 # correctly. Just rm these files and let %%doc take care of it
 rm -fr %{buildroot}/%{_usr}/doc
 
-# (sb) a portion of the header files are in /usr/include, while the rest
-# are in /usr/include/inn - paths.h conflicts with glibc-devel
-# right now inn-devel isn't used for anything, nor do the other header
-# files seem to be looking for them a directory up - move them
-#mv %{buildroot}/%{_includedir}/*.h %{buildroot}/%{_includedir}/inn
+# Remove unwanted files
+rm -rf %{buildroot}%{_libdir}/*.la
+rm -rf %{buildroot}%{_libdir}/*.a
 
-# (sb) file mode now prevents strip from working?
-chmod u+w %{buildroot}/%{_bindir}/*
-chmod u+w %{buildroot}/%{_bindir}/auth/resolv/*
-chmod u+w %{buildroot}/%{_bindir}/auth/passwd/*
-chmod u+w %{buildroot}/%{_bindir}/rnews.libexec/*
+install -D -p -m 0644 %{SOURCE11} %{buildroot}%{_tmpfilesdir}/%{name}.conf
 
-chmod +x %{buildroot}/var/lib/news/http
+# (tv) fix build:
+chmod u+rx %{buildroot}/var/lib/news/http
+
+%pre
+%_pre_useradd news /etc/news %{_sbindir}/nologin
+
+%pre -n inews
+%_pre_useradd news /etc/news %{_sbindir}/nologin
 
 %post
+%_tmpfilescreate %{name}
 %_post_service innd
 
 umask 002
@@ -264,28 +276,6 @@ else
   echo "Network misconfigured, manual setup required..."
 fi
 
-%triggerin -- sysklogd
-if [ -f /etc/syslog.conf ]; then
-  if grep -q "# News logging" /etc/syslog.conf; then
-sed -i -e "s!mail.none;authpriv.none!mail.none;news.none;authpriv.none!; \
-	     s!/var/log/news/info!/var/log/news/news.notice!; \
-	     s!/var/log/news/errors!/var/log/news/news.err!; \
-	     s!/var/log/news/warnings!/var/log/news/news.crit!; \
-	     s!^news.err!news.=err!; \
-	     s!^news.=warn!news.=crit!; " /etc/syslog.conf 
-	else
-	cat <<EOF >> /etc/syslog.conf
-# News logging
-news.=debug;news.=info;news.=notice                             -/var/log/news/news.notice
-news.=crit                                                      -/var/log/news/news.crit
-news.err                                                        -/var/log/news/news.err
-EOF
-    fi
-  if [ -f /var/run/syslog.pid ]; then
-    kill -HUP `cat /var/run/syslog.pid` 2> /dev/null ||:
-  fi
-fi
-
 %preun
 %_preun_service innd
 
@@ -301,340 +291,237 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %files
+%doc NEWS README* HACKING ChangeLog CONTRIBUTORS LICENSE INSTALL FAQ.html
+%doc doc/config-design doc/history-innfeed doc/GPL doc/sample-control
+%doc doc/config-semantics doc/external-auth TODO doc/hook-python doc/config-syntax
+%doc doc/hook-perl doc/history
+%doc samples
+
+%defattr(-,root,root)
+%{_unitdir}/innd.service
+%{_unitdir}/innd-expire.service
+%{_unitdir}/innd-expire.timer
+%{_unitdir}/innd-nntpsend.service
+%{_unitdir}/innd-nntpsend.timer
+%{_unitdir}/innd-rnews.service
+%{_unitdir}/innd-rnews.timer
+%{_tmpfilesdir}/%{name}.conf
+
 %defattr(-,news,news)
 %dir %{_sysconfdir}/news
-%attr(775,news,news) %dir /var/spool/news
-%attr(775,news,news) %dir /var/spool/news/articles
-%attr(775,news,news) %dir /var/spool/news/overview
-%attr(775,news,news) %dir /var/spool/news/archive
-%attr(775,news,news) %dir /var/spool/news/incoming
-%attr(775,news,news) %dir /var/spool/news/incoming/bad
-%attr(775,news,news) %dir /var/spool/news/outgoing
-%attr(775,news,news) %dir /var/spool/news/innfeed
-%attr(770,news,news) %dir /var/spool/news/tmp
-%attr(770,news,news) %dir /var/log/news
-/var/log/news/OLD
-%attr(770,news,news) %dir /var/lib/news
-%attr(770,news,news) %dir /var/run/news
+%config(noreplace) %{_sysconfdir}/news/passwd.nntp
+%config(noreplace) %{_sysconfdir}/news/send-uucp.cf
+%config(noreplace) %{_sysconfdir}/news/actsync.cfg
+%config(noreplace) %{_sysconfdir}/news/motd.innd.sample
+%config(noreplace) %{_sysconfdir}/news/motd.nnrpd.sample
+%config(noreplace) %{_sysconfdir}/news/expire.ctl
+%config(noreplace) %{_sysconfdir}/news/actsync.ign
+%config(noreplace) %{_sysconfdir}/news/innreport.conf
+%config(noreplace) %{_sysconfdir}/news/distrib.pats
+%config(noreplace) %{_sysconfdir}/news/buffindexed.conf
+%config(noreplace) %{_sysconfdir}/news/innwatch.ctl
+%config(noreplace) %{_sysconfdir}/news/nntpsend.ctl
+%config(noreplace) %{_sysconfdir}/news/innfeed.conf
+%config(noreplace) %{_sysconfdir}/news/nnrpd.track
+%config(noreplace) %{_sysconfdir}/news/control.ctl.local
+%config(noreplace) %{_sysconfdir}/news/storage.conf
+%config(noreplace) %{_sysconfdir}/news/moderators
+%config(noreplace) %{_sysconfdir}/news/news2mail.cf
+%config(noreplace) %{_sysconfdir}/news/cycbuff.conf
+%config(noreplace) %{_sysconfdir}/news/subscriptions
+%config(noreplace) %{_sysconfdir}/news/control.ctl
+%config(noreplace) %{_sysconfdir}/news/localgroups
+%config(noreplace) %{_sysconfdir}/news/.profile
+%config(noreplace) %{_sysconfdir}/news/nocem.ctl
+%config(noreplace) %{_sysconfdir}/news/incoming.conf
+%config(noreplace) %{_sysconfdir}/news/inn-radius.conf
+%config(noreplace) %{_sysconfdir}/news/ovdb.conf
+%config(noreplace) %{_sysconfdir}/news/newsfeeds
+%config(noreplace) %{_sysconfdir}/news/readers.conf
+%config(noreplace) %{_sysconfdir}/news/distributions
 
-%attr(-,root,root) %doc HACKING LICENSE MANIFEST TODO
-%attr(-,root,root) %doc README* ChangeLog CONTRIBUTORS INSTALL NEWS
-%attr(-,root,root) %doc faq
-%attr(-,root,root) %doc doc/hook* doc/config*
-%attr(-,root,root) %doc doc/sample-control doc/GPL doc/history
+%dir %{_sharedstatedir}/news
+%config(noreplace) %{_sharedstatedir}/news/active
+%config(noreplace) %{_sharedstatedir}/news/active.times
+%config(noreplace) %{_sharedstatedir}/news/subscriptions
+%config(noreplace) %{_sharedstatedir}/news/history
+%config(noreplace) %{_sharedstatedir}/news/distributions
+%config(noreplace) %{_sharedstatedir}/news/newsgroups
 
-%defattr(755,root,root)
-%dir /var/lib/news/http
-/var/lib/news/http/innreport.css
+%config(noreplace) %{_sysconfdir}/news/innshellvars.pl.local
+%config(noreplace) %{_sysconfdir}/news/innshellvars.local
+%config(noreplace) %{_sysconfdir}/news/innshellvars.tcl.local
 
-%dir %{_libdir}/news/bin/control
-%dir %{_libdir}/news/bin/filter
-%{_libdir}/news/bin/filter/filter_innd.pl
-%{_libdir}/news/bin/filter/nnrpd_auth.pl
-%{_libdir}/news/bin/filter/startup_innd.pl
-%{_libdir}/news/bin/filter/INN.py
-%{_libdir}/news/bin/filter/filter_nnrpd.pl
-%{_libdir}/news/bin/filter/nnrpd_dynamic.py
-%{_libdir}/news/bin/filter/nnrpd_auth.py
-%{_libdir}/news/bin/filter/nnrpd_access.pl
-%{_libdir}/news/bin/filter/nnrpd_access.py
-%{_libdir}/news/bin/filter/nnrpd.py
-%{_libdir}/news/bin/filter/filter_innd.py
-%{_libdir}/news/bin/control/sendsys.pl
-%{_libdir}/news/bin/control/rmgroup.pl
-%{_libdir}/news/bin/control/newgroup.pl
-%{_libdir}/news/bin/control/ihave.pl
-%{_libdir}/news/bin/control/sendme.pl
-%{_libdir}/news/bin/control/checkgroups.pl
-%{_libdir}/news/bin/control/version.pl
-%{_libdir}/news/bin/control/senduuname.pl
-%dir %{perl_vendorlib}/INN
-%dir %{perl_vendorlib}/INN/Utils
-%{perl_vendorlib}/INN/Config.pm
-%{perl_vendorlib}/INN/Utils/Shlock.pm
-%{_bindir}/scanspool
-%{_bindir}/nntpsend
-%{_bindir}/send-ihave
-%{_bindir}/send-nntp
-%{_bindir}/send-uucp
-%{_bindir}/perl-nocem
-%{_bindir}/shrinkfile
-%{_bindir}/tdx-util
-%{_bindir}/convdate
-%{_bindir}/innbind
-%{_bindir}/getlist
-%{_bindir}/buffindexed_d
-%{_bindir}/innreport_inn.pm
-%config(noreplace) %{_bindir}/innshellvars.pl
-%{_bindir}/archive
-%{_bindir}/pullnews
-%attr(6550,uucp,news) %{_bindir}/rnews
-%dir %{_bindir}/rnews.libexec
-%{_bindir}/rnews.libexec/gunbatch
-%{_bindir}/rnews.libexec/c7unbatch
-%{_bindir}/rnews.libexec/decode
-%{_bindir}/rnews.libexec/encode
-%{_bindir}/rnews.libexec/bunbatch
-%{_bindir}/sendxbatches
-%{_bindir}/nnrpd
-%{_bindir}/filechan
-%{_bindir}/innxmit
-%{_bindir}/tinyleaf
-%{_bindir}/cnfsstat
-%{_bindir}/ovdb_stat
-%{_bindir}/ninpaths
-%{_bindir}/innfeed
-%{_bindir}/signcontrol
-%{_bindir}/sendinpaths
-%{_bindir}/tally.control
-%dir %{_bindir}/auth/resolv
-%dir %{_bindir}/auth/passwd
-%{_bindir}/auth/passwd/ckpasswd
-%{_bindir}/auth/passwd/radius
-%{_bindir}/auth/resolv/domain
-%{_bindir}/auth/resolv/ident
-%{_bindir}/imapfeed
-%{_bindir}/innupgrade
-%{_bindir}/expireover
-%{_bindir}/makehistory
-%{_bindir}/writelog
-%{_bindir}/simpleftp
-%{_bindir}/grephistory
-%{_bindir}/sm
-%{_bindir}/mod-active
-%{_bindir}/mailpost
-%{_bindir}/innconfval
-%{_bindir}/procbatch
-%{_bindir}/cvtbatch
-%config(noreplace) %{_bindir}/innshellvars.tcl
-%{_bindir}/cnfsheadconf
-%{_bindir}/pgpverify
-%{_bindir}/actsync
-%{_bindir}/nntpget
-%{_bindir}/innreport
-%{_bindir}/ovdb_monitor
-%{_bindir}/buffchan
-%{_bindir}/actsyncd
-%{_bindir}/controlchan
-%config(noreplace) %{_bindir}/innshellvars
-%{_bindir}/shlock
-%{_bindir}/news.daily
-%{_bindir}/docheckgroups
-%{_bindir}/ovdb_server
-%{_bindir}/ovdb_init
-%{_bindir}/scanlogs
-%{_bindir}/inncheck
-%{_bindir}/controlbatch
-%{_bindir}/actmerge
-%{_bindir}/innd
-%{_bindir}/expire
-%{_bindir}/prunehistory
-%{_bindir}/makedbz
-%{_bindir}/innstat
-%{_bindir}/fastrm
-%{_bindir}/innxbatch
-%{_bindir}/ctlinnd
-%{_bindir}/innmail
-%{_bindir}/innwatch
-%{_bindir}/news2mail
-%{_bindir}/inndf
-%{_bindir}/batcher
-%{_bindir}/expirerm
-%{_bindir}/overchan
-%config(noreplace) %attr(755,root,root) %{_initrddir}/innd
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/actsync.cfg
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/actsync.ign
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/buffindexed.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/control.ctl
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/control.ctl.local
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/cycbuff.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/distrib.pats
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/distributions
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/expire.ctl
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/incoming.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/innfeed.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/innreport.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/innshellvars.local
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/innshellvars.pl.local
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/innshellvars.tcl.local
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/innwatch.ctl
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/localgroups
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/moderators
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/motd.innd.sample
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/motd.nnrpd.sample
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/news2mail.cf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/newsfeeds
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/nnrp.access
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/nnrpd.track
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/nntpsend.ctl
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/nocem.ctl
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/ovdb.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/passwd.nntp
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/inn-radius.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/readers.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/send-uucp.cf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/storage.conf
-%attr(640,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/subscriptions
-%attr(640,uucp,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/news/inn.conf
-%{_sysconfdir}/cron.hourly/inn-cron-nntpsend
-%config(noreplace) %attr(755,root,root) %{_sysconfdir}/cron.hourly/inn-cron-rnews
-%attr(755,root,news) %config(noreplace) %verify(not size mtime md5) %{_sysconfdir}/rc.news
-%{_sysconfdir}/cron.daily/inn-cron-expire
-%attr(640,news,news) %config(noreplace) /var/lib/news/active
-%attr(640,news,news) %config(noreplace) /var/lib/news/.news.daily
-%attr(640,news,news) %config(noreplace) /var/lib/news/active.times
-%attr(640,news,news) %config(noreplace) /var/lib/news/subscriptions
-%attr(640,news,news) %config(noreplace) /var/lib/news/history
-%attr(640,news,news) %config(noreplace) /var/lib/news/distributions
-%attr(640,news,news) %config(noreplace) /var/lib/news/newsgroups
-%attr(644,root,root) %{_mandir}/man1/convdate.1*
-%attr(644,root,root) %{_mandir}/man1/fastrm.1*
-%attr(644,root,root) %{_mandir}/man1/getlist.1*
-%attr(644,root,root) %{_mandir}/man1/grephistory.1*
-%attr(644,root,root) %{_mandir}/man1/innconfval.1*
-%attr(644,root,root) %{_mandir}/man1/innmail.1*
-%attr(644,root,root) %{_mandir}/man1/nntpget.1*
-%attr(644,root,root) %{_mandir}/man1/pgpverify.1*
-%attr(644,root,root) %{_mandir}/man1/pullnews.1*
-%attr(644,root,root) %{_mandir}/man1/rnews.1*
-%attr(644,root,root) %{_mandir}/man1/shlock.1*
-%attr(644,root,root) %{_mandir}/man1/shrinkfile.1*
-%attr(644,root,root) %{_mandir}/man1/simpleftp.1*
-%attr(644,root,root) %{_mandir}/man1/sm.1*
-%attr(644,root,root) %{_mandir}/man5/active.5*
-%attr(644,root,root) %{_mandir}/man5/active.times.5*
-%attr(644,root,root) %{_mandir}/man5/buffindexed.conf.5*
-%attr(644,root,root) %{_mandir}/man5/control.ctl.5*
-%attr(644,root,root) %{_mandir}/man5/cycbuff.conf.5*
-%attr(644,root,root) %{_mandir}/man5/distrib.pats.5*
-%attr(644,root,root) %{_mandir}/man5/distributions.5*
-%attr(644,root,root) %{_mandir}/man5/expire.ctl.5*
-%attr(644,root,root) %{_mandir}/man5/history.5*
-%attr(644,root,root) %{_mandir}/man5/incoming.conf.5*
-%attr(644,root,root) %{_mandir}/man5/inn.conf.5*
-%attr(644,root,root) %{_mandir}/man5/innfeed.conf.5*
-%attr(644,root,root) %{_mandir}/man5/innwatch.ctl.5*
-%attr(644,root,root) %{_mandir}/man5/localgroups.5*
-%attr(644,root,root) %{_mandir}/man5/moderators.5*
-%attr(644,root,root) %{_mandir}/man5/motd.innd.5*
-%attr(644,root,root) %{_mandir}/man5/motd.news.5*
-%attr(644,root,root) %{_mandir}/man5/motd.nnrpd.5*
-%attr(644,root,root) %{_mandir}/man5/newsfeeds.5*
-%attr(644,root,root) %{_mandir}/man5/newsgroups.5*
-%attr(644,root,root) %{_mandir}/man5/newslog.5*
-%attr(644,root,root) %{_mandir}/man5/nnrpd.track.5*
-%attr(644,root,root) %{_mandir}/man5/nntpsend.ctl.5*
-%attr(644,root,root) %{_mandir}/man5/nocem.ctl.5*
-%attr(644,root,root) %{_mandir}/man5/ovdb.5*
-%attr(644,root,root) %{_mandir}/man5/passwd.nntp.5*
-%attr(644,root,root) %{_mandir}/man5/inn-radius.conf.5*
-%attr(644,root,root) %{_mandir}/man5/readers.conf.5*
-%attr(644,root,root) %{_mandir}/man5/storage.conf.5*
-%attr(644,root,root) %{_mandir}/man5/subscriptions.5*
-%attr(644,root,root) %{_mandir}/man8/actsync.8*
-%attr(644,root,root) %{_mandir}/man8/actsyncd.8*
-%attr(644,root,root) %{_mandir}/man8/archive.8*
-%attr(644,root,root) %{_mandir}/man8/batcher.8*
-%attr(644,root,root) %{_mandir}/man8/buffchan.8*
-%attr(644,root,root) %{_mandir}/man8/ckpasswd.8*
-%attr(644,root,root) %{_mandir}/man8/cnfsheadconf.8*
-%attr(644,root,root) %{_mandir}/man8/cnfsstat.8*
-%attr(644,root,root) %{_mandir}/man8/controlchan.8*
-%attr(644,root,root) %{_mandir}/man8/ctlinnd.8*
-%attr(644,root,root) %{_mandir}/man8/cvtbatch.8*
-%attr(644,root,root) %{_mandir}/man8/docheckgroups.8*
-%attr(644,root,root) %{_mandir}/man8/domain.8*
-%attr(644,root,root) %{_mandir}/man8/expire.8*
-%attr(644,root,root) %{_mandir}/man8/expireover.8*
-%attr(644,root,root) %{_mandir}/man8/expirerm.8*
-%attr(644,root,root) %{_mandir}/man8/filechan.8*
-%attr(644,root,root) %{_mandir}/man8/ident.8*
-%attr(644,root,root) %{_mandir}/man8/imapfeed.8*
-%attr(644,root,root) %{_mandir}/man8/innbind.8*
-%attr(644,root,root) %{_mandir}/man8/inncheck.8*
-%attr(644,root,root) %{_mandir}/man8/innd.8*
-%attr(644,root,root) %{_mandir}/man8/inndf.8*
-%attr(644,root,root) %{_mandir}/man8/innfeed.8*
-%attr(644,root,root) %{_mandir}/man8/innreport.8*
-%attr(644,root,root) %{_mandir}/man8/innstat.8*
-%attr(644,root,root) %{_mandir}/man8/innupgrade.8*
-%attr(644,root,root) %{_mandir}/man8/innwatch.8*
-%attr(644,root,root) %{_mandir}/man8/innxbatch.8*
-%attr(644,root,root) %{_mandir}/man8/innxmit.8*
-%attr(644,root,root) %{_mandir}/man8/inpaths.8*
-%attr(644,root,root) %{_mandir}/man8/mailpost.8*
-%attr(644,root,root) %{_mandir}/man8/makedbz.8*
-%attr(644,root,root) %{_mandir}/man8/makehistory.8*
-%attr(644,root,root) %{_mandir}/man8/mod-active.8*
-%attr(644,root,root) %{_mandir}/man8/news.daily.8*
-%attr(644,root,root) %{_mandir}/man8/news2mail.8*
-%attr(644,root,root) %{_mandir}/man8/ninpaths.8*
-%attr(644,root,root) %{_mandir}/man8/nnrpd.8*
-%attr(644,root,root) %{_mandir}/man8/nntpsend.8*
-%attr(644,root,root) %{_mandir}/man8/ovdb_init.8*
-%attr(644,root,root) %{_mandir}/man8/ovdb_monitor.8*
-%attr(644,root,root) %{_mandir}/man8/ovdb_server.8*
-%attr(644,root,root) %{_mandir}/man8/ovdb_stat.8*
-%attr(644,root,root) %{_mandir}/man8/overchan.8*
-%attr(644,root,root) %{_mandir}/man8/perl-nocem.8*
-%attr(644,root,root) %{_mandir}/man8/procbatch.8*
-%attr(644,root,root) %{_mandir}/man8/prunehistory.8*
-%attr(644,root,root) %{_mandir}/man8/radius.8*
-%attr(644,root,root) %{_mandir}/man8/rc.news.8*
-%attr(644,root,root) %{_mandir}/man8/scanlogs.8*
-%attr(644,root,root) %{_mandir}/man8/scanspool.8*
-%attr(644,root,root) %{_mandir}/man8/send-nntp.8*
-%attr(644,root,root) %{_mandir}/man8/send-uucp.8*
-%attr(644,root,root) %{_mandir}/man8/sendinpaths.8*
-%attr(644,root,root) %{_mandir}/man8/tally.control.8*
-%attr(644,root,root) %{_mandir}/man8/tdx-util.8*
-%attr(644,root,root) %{_mandir}/man8/tinyleaf.8*
-%attr(644,root,root) %{_mandir}/man8/writelog.8*
+%defattr(0755,root,news)
+%{_bindir}/rnews
+%dir %{_libexecdir}/news
+%{_libexecdir}/news/controlbatch
+%attr(4510,root,news) %{_libexecdir}/news/innbind
+%{_libexecdir}/news/docheckgroups
+%{_libexecdir}/news/imapfeed
+%{_libexecdir}/news/send-nntp
+%{_libexecdir}/news/actmerge
+%{_libexecdir}/news/ovdb_server
+%{_libexecdir}/news/filechan
+%{_libexecdir}/news/ninpaths
+%{_libexecdir}/news/mod-active
+%{_libexecdir}/news/news2mail
+%{_libexecdir}/news/innconfval
+%{_libexecdir}/news/shlock
+%{_libexecdir}/news/nnrpd
+%{_libexecdir}/news/controlchan
+%{_libexecdir}/news/procbatch
+%{_libexecdir}/news/expire
+%{_libexecdir}/news/convdate
+%{_libexecdir}/news/pullnews
+%{_libexecdir}/news/archive
+%{_libexecdir}/news/cnfsstat
+%{_libexecdir}/news/grephistory
+%{_libexecdir}/news/send-ihave
+%{_libexecdir}/news/tinyleaf
+%{_libexecdir}/news/cvtbatch
+%{_libexecdir}/news/expirerm
+%{_libexecdir}/news/rc.news
+%attr(4550,uucp,news) %{_libexecdir}/news/rnews
+%{_libexecdir}/news/innxmit
+%{_libexecdir}/news/actsyncd
+%{_libexecdir}/news/shrinkfile
+%{_libexecdir}/news/makedbz
+%{_libexecdir}/news/actsync
+%{_libexecdir}/news/pgpverify
+%{_libexecdir}/news/inndf
+%{_libexecdir}/news/scanlogs
+%{_libexecdir}/news/simpleftp
+%{_libexecdir}/news/ovdb_init
+%{_libexecdir}/news/ctlinnd
+%{_libexecdir}/news/innstat
+%{_libexecdir}/news/send-uucp
+%{_libexecdir}/news/buffchan
+%{_libexecdir}/news/perl-nocem
+%{_libexecdir}/news/scanspool
+%{_libexecdir}/news/expireover
+%{_libexecdir}/news/batcher
+%{_libexecdir}/news/fastrm
+%{_libexecdir}/news/innmail
+%{_libexecdir}/news/innxbatch
+%{_libexecdir}/news/buffindexed_d
+%{_libexecdir}/news/nntpget
+%{_libexecdir}/news/cnfsheadconf
+%{_libexecdir}/news/ovdb_stat
+%{_libexecdir}/news/prunehistory
+%{_libexecdir}/news/innreport
+%attr(0644,root,news) %{_libexecdir}/news/innreport_inn.pm
+%{_libexecdir}/news/getlist
+%{_libexecdir}/news/innd
+%{_libexecdir}/news/innupgrade
+%{_libexecdir}/news/news.daily
+%{_libexecdir}/news/sm
+%{_libexecdir}/news/innwatch
+%{_libexecdir}/news/inncheck
+%{_libexecdir}/news/writelog
+%{_libexecdir}/news/signcontrol
+%{_libexecdir}/news/tdx-util
+%{_libexecdir}/news/tally.control
+%{_libexecdir}/news/overchan
+%{_libexecdir}/news/sendinpaths
+%{_libexecdir}/news/makehistory
+%{_libexecdir}/news/nntpsend
+%{_libexecdir}/news/mailpost
+%{_libexecdir}/news/innfeed
+%{_libexecdir}/news/ovdb_monitor
+%{_libexecdir}/news/sendxbatches
 
-%files devel
-%defattr(-,root,root)
+%define filterdir %{_libexecdir}/news/filter
+%dir %{filterdir}
+%{filterdir}/filter_nnrpd.pl
+%{filterdir}/nnrpd_access.pl
+%{filterdir}/startup_innd.pl
+%{filterdir}/nnrpd_auth.py*
+%{filterdir}/nnrpd_access.py*
+%{filterdir}/nnrpd_auth.pl
+%{filterdir}/INN.py*
+%{filterdir}/__pycache__/
+%{filterdir}/nnrpd.py*
+%{filterdir}/filter_innd.py*
+%{filterdir}/nnrpd_dynamic.py*
+
+%define authdir %{_libexecdir}/news/auth
+%dir %{authdir}
+
+%define passwddir %{authdir}/passwd
+%dir %{passwddir}
+%{passwddir}/auth_krb5
+%{passwddir}/ckpasswd
+%{passwddir}/radius
+
+%define resolvdir %{authdir}/resolv
+%dir %{resolvdir}
+%{resolvdir}/domain
+%{resolvdir}/ident
+
+%define controldir %{_libexecdir}/news/control
+%dir %{controldir}
+%{controldir}/version.pl
+%{controldir}/ihave.pl
+%{controldir}/sendsys.pl
+%{controldir}/sendme.pl
+%{controldir}/checkgroups.pl
+%{controldir}/senduuname.pl
+%{controldir}/newgroup.pl
+%{controldir}/rmgroup.pl
+
+%define rnewsdir %{_libexecdir}/news/rnews.libexec
+%dir %{rnewsdir}
+%{rnewsdir}/encode
+%{rnewsdir}/gunbatch
+%{rnewsdir}/decode
+%{rnewsdir}/bunbatch
+%{rnewsdir}/c7unbatch
+
+%{_libexecdir}/news/innshellvars.pl
+%{_libexecdir}/news/innshellvars
+%{_libexecdir}/news/innshellvars.tcl
+
+%attr(0775,root,news) %dir %{_sharedstatedir}/news/http
+%{_sharedstatedir}/news/http/innreport.css
+
+%{perl_vendorlib}/INN
+
+%defattr(-,news,news)
+%dir /var/spool/news
+%dir /var/spool/news/archive
+%dir /var/spool/news/articles
+%dir /var/spool/news/incoming
+%dir /var/spool/news/incoming/bad
+%dir /var/spool/news/innfeed
+%dir /var/spool/news/outgoing
+%dir /var/spool/news/overview
+%dir /var/log/news
+%dir /var/log/news/OLD
+%dir /var/lib/news/tmp
+%ghost %dir /run/news
+
+%{_mandir}/man1/*
+%exclude %{_mandir}/man1/inews.1*
+%{_mandir}/man5/*
+%{_mandir}/man8/*
+
+%files -n %{libname}
+%{_libdir}/lib%{name}.so.%{major}{,.*}
+
+%files -n %{libhist}
+%{_libdir}/lib%{name}hist.so.%{major_h}{,.*}
+
+%files -n %{libsto}
+%{_libdir}/libstorage.so.%{major_s}{,.*}
+
+%files -n %{devname}
+%{_includedir}/inn
 %{_mandir}/man3/*
-%dir %{_includedir}/%{name}
-%defattr(644,root,root)
-%{_libdir}/libinnhist.a
-%{_libdir}/libinn.a
-%{_libdir}/libstorage.a
-%{_includedir}/inn/clibrary.h
-%{_includedir}/inn/inndcomm.h
-%{_includedir}/inn/vector.h
-%{_includedir}/inn/dbz.h
-%{_includedir}/inn/confparse.h
-%{_includedir}/inn/storage.h
-%{_includedir}/inn/timer.h
-%{_includedir}/inn/mmap.h
-%{_includedir}/inn/ov.h
-%{_includedir}/inn/md5.h
-%{_includedir}/inn/network.h
-%{_includedir}/inn/tst.h
-%{_includedir}/inn/history.h
-%{_includedir}/inn/libinn.h
-%{_includedir}/inn/nntp.h
-%{_includedir}/inn/version.h
-%{_includedir}/inn/system.h
-%{_includedir}/inn/config.h
-%{_includedir}/inn/sequence.h
-%{_includedir}/inn/defines.h
-%{_includedir}/inn/innconf.h
-%{_includedir}/inn/qio.h
-%{_includedir}/inn/paths.h
-%{_includedir}/inn/options.h
-%{_includedir}/inn/list.h
-%{_includedir}/inn/buffer.h
-%{_includedir}/inn/wire.h
-%{_includedir}/inn/utility.h
-%{_includedir}/inn/overview.h
-%{_includedir}/inn/hashtab.h
-%{_includedir}/inn/messages.h
-%{_includedir}/inn/dispatch.h
-%{_includedir}/inn/newsuser.h
+%{_libdir}/*.so
 
 %files -n inews
-%attr(755,root,root) /usr/bin/inews
-%attr(644,root,root) %{_mandir}/man1/inews*
-
-
+%config(noreplace) %attr(-,news,news) %{_sysconfdir}/news/inn.conf
+%{_bindir}/inews
+%attr(0755,root,root) %{_libexecdir}/news/inews
+%{_mandir}/man1/inews.1*

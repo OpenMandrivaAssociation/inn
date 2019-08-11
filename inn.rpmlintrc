@@ -1,3 +1,0 @@
-# Not a error here, we really want non-standard
-addFilter("E: non-readable")
-addFilter("E: non-standard-dir-perm")

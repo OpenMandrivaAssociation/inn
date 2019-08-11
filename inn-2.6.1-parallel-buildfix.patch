@@ -1,0 +1,20 @@
+--- inn-2.6.1/Makefile.deps	2016-11-27 15:03:42.000000000 +0100
++++ inn-2.6.1/Makefile	2017-09-09 13:07:41.965716358 +0200
+@@ -60,8 +60,7 @@
+ all-perl:	all-history	; cd perl      && $(MAKE) all
+ 
+ all-programs:	all-innd all-nnrpd all-innfeed all-control all-expire \
+-		all-frontends all-backends all-authprogs all-scripts \
+-		all-store-util
++		all-frontends all-backends all-authprogs all-scripts
+ 
+ all-authprogs:	all-lib		; cd authprogs && $(MAKE) all
+ all-backends:	all-libraries	; cd backends  && $(MAKE) all
+@@ -72,7 +71,6 @@
+ all-innfeed:	all-libraries	; cd innfeed   && $(MAKE) all
+ all-nnrpd:	all-libraries	; cd nnrpd     && $(MAKE) all
+ all-scripts:			; cd scripts   && $(MAKE) all
+-all-store-util:	all-libraries	; cd storage   && $(MAKE) programs
+ 
+ 
+ ##  If someone tries to run make before running configure, tell them to run

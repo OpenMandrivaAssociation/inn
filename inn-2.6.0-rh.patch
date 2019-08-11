@@ -1,0 +1,44 @@
+diff -up inn-2.6.0/Makefile.global.in.rh inn-2.6.0/Makefile.global.in
+--- inn-2.6.0/Makefile.global.in.rh	2015-09-12 15:25:22.000000000 +0200
++++ inn-2.6.0/Makefile.global.in	2016-01-21 15:45:09.587661504 +0100
+@@ -299,8 +299,8 @@ INEWSMODE	= @INEWSMODE@
+ RNEWSMODE	= @RNEWSMODE@
+ FILEMODE	= @FILEMODE@
+ 
+-OWNER		= -o $(RUNASUSER) -g $(RUNASGROUP)
+-ROWNER		= -o $(RUNASUSER) -g $(RNEWSGROUP)
++OWNER           =
++ROWNER          =
+ 
+ INSTALL		= $(top)/support/install-sh -c
+ 
+diff -up inn-2.6.0/samples/inn.conf.in.rh inn-2.6.0/samples/inn.conf.in
+--- inn-2.6.0/samples/inn.conf.in.rh	2015-09-12 15:25:22.000000000 +0200
++++ inn-2.6.0/samples/inn.conf.in	2016-01-21 15:45:09.587661504 +0100
+@@ -21,7 +21,7 @@ mta:                         "@SENDMAIL@
+ organization:                "A poorly-installed InterNetNews site"
+ ovmethod:                    tradindexed
+ hismethod:                   hisv6
+-pathhost:                    @HOSTNAME@
++#pathhost:                    localhost
+ pathnews:                    @prefix@
+ 
+ #runasuser:
+@@ -147,7 +147,7 @@ backofftrigger:              10000
+ 
+ # Monitoring
+ 
+-doinnwatch:                  true
++doinnwatch:                  false
+ innwatchbatchspace:          4000
+ innwatchlibspace:            25000
+ innwatchloload:              1000
+@@ -186,7 +186,7 @@ icdsynccount:                10
+ keepmmappedthreshold:        1024
+ #maxcmdreadsize:
+ maxforks:                    10
+-nicekids:                    4
++nicekids:                    0
+ nicenewnews:                 0
+ nicennrpd:                   0
+ pauseretrytime:              300
