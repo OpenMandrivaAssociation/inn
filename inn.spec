@@ -32,6 +32,11 @@ Patch7:		inn-2.4.3.warn.patch
 Patch14:	inn-redhat_build.patch
 Patch17:	inn-2.5.2-pconf.patch
 Patch18:	inn-2.6.1-parallel-buildfix.patch
+BuildRequires:	autoconf
+BuildRequires:	automake
+BuildRequires:	libtool-base
+BuildRequires:	slibtool
+BuildRequires:	make
 BuildRequires:	bison
 BuildRequires:	perl-ExtUtils-Embed	
 BuildRequires:	db-devel
