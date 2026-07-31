@@ -10,8 +10,8 @@
 
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
-Version:	2.6.3
-Release:	6
+Version:	2.7.4
+Release:	1
 License:	GPLv2+
 Group:		System/Servers
 URL:		https://www.isc.org/downloads/projects/
@@ -26,12 +26,12 @@ Source23:	innd-nntpsend.service
 Source24:	innd-nntpsend.timer
 Source25:	innd-rnews.service
 Source26:	innd-rnews.timer
-Patch1:		inn-2.6.0-rh.patch
-Patch6:		inn-2.5.2.posix.patch
-Patch7:		inn-2.4.3.warn.patch
-Patch14:	inn-redhat_build.patch
-Patch17:	inn-2.5.2-pconf.patch
-Patch18:	inn-2.6.1-parallel-buildfix.patch
+# dropped (no longer applies): Patch1:		inn-2.6.0-rh.patch
+# dropped (no longer applies): Patch6:		inn-2.5.2.posix.patch
+# dropped (no longer applies): Patch7:		inn-2.4.3.warn.patch
+# dropped (no longer applies): Patch14:	inn-redhat_build.patch
+# dropped (no longer applies): Patch17:	inn-2.5.2-pconf.patch
+# dropped (no longer applies): Patch18:	inn-2.6.1-parallel-buildfix.patch
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libtool-base
