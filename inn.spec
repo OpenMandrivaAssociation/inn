@@ -11,7 +11,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.7.4
-Release:	7
+Release:	8
 License:	GPLv2+
 Group:		System/Servers
 URL:		https://www.isc.org/downloads/projects/
@@ -166,7 +166,7 @@ done
 
 touch %{buildroot}%{_sharedstatedir}/news/history
 touch %{buildroot}%{_sharedstatedir}/news/subscriptions
-chmod 644 %{buildroot}%{_sharedstatedir}/news/subscriptions
+chmod 644 %{buildroot}%{_sharedstatedir}/news/subscriptions || true
 
 install -m 644 %{SOURCE2} %{buildroot}%{_sharedstatedir}/news/distributions
 
@@ -197,7 +197,7 @@ ln -sf %{_libexecdir}/news/inews %{buildroot}%{_bindir}/inews
 ln -sf %{_libexecdir}/news/rnews %{buildroot}%{_bindir}/rnews
 
 # fix debuginfo extraction, permissions are set in files section, anyway
-chmod u+w %{buildroot}%{_libdir}/lib{inn{,hist},storage}.so.*
+chmod u+w %{buildroot}%{_libdir}/lib{inn{,hist},storage}.so.* || true
 pushd %{buildroot}%{_libexecdir}/news
 chmod u+w \
           actsync \
@@ -241,7 +241,7 @@ rm -rf %{buildroot}%{_libdir}/*.a
 install -D -p -m 0644 %{SOURCE11} %{buildroot}%{_tmpfilesdir}/%{name}.conf
 
 # (tv) fix build:
-chmod u+rx %{buildroot}/var/lib/news/http
+chmod u+rx %{buildroot}/var/lib/news/http || true
 
 %pre
 %_pre_useradd news /etc/news %{_sbindir}/nologin
