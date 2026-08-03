@@ -1,17 +1,20 @@
 %define _disable_ld_no_undefined 1
 
-%define major	6
+# INN 2.7 sonames: libinn.so.9, libinnhist.so.3, libinnstorage.so.5
+%define major	9
 %define major_h	3
-%define major_s	3
+%define major_s	5
 %define libname	%mklibname %{name} %{major}
 %define libhist	%mklibname %{name}hist %{major_h}
-%define libsto	%mklibname storage %{major_s}
+%define libsto	%mklibname %{name}storage %{major_s}
 %define devname	%mklibname %{name} -d
+# OMV %{_sharedstatedir} is /usr/com; INN pathdb belongs under /var/lib/news
+%define newsdb	/var/lib/news
 
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.7.4
-Release:	9
+Release:	10
 License:	GPLv2+
 Group:		System/Servers
 URL:		https://www.isc.org/downloads/projects/
@@ -27,19 +30,13 @@ Source23:	innd-nntpsend.service
 Source24:	innd-nntpsend.timer
 Source25:	innd-rnews.service
 Source26:	innd-rnews.timer
-# dropped (no longer applies): Patch1:		inn-2.6.0-rh.patch
-# dropped (no longer applies): Patch6:		inn-2.5.2.posix.patch
-# dropped (no longer applies): Patch7:		inn-2.4.3.warn.patch
-# dropped (no longer applies): Patch14:	inn-redhat_build.patch
-# dropped (no longer applies): Patch17:	inn-2.5.2-pconf.patch
-# dropped (no longer applies): Patch18:	inn-2.6.1-parallel-buildfix.patch
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libtool-base
 BuildRequires:	slibtool
 BuildRequires:	make
 BuildRequires:	bison
-BuildRequires:	perl-ExtUtils-Embed	
+BuildRequires:	perl-ExtUtils-Embed
 BuildRequires:	db-devel
 BuildRequires:	flex
 BuildRequires:	pkgconfig(openssl) >= 1.1
@@ -47,10 +44,15 @@ BuildRequires:	perl-devel
 BuildRequires:	pkgconfig(krb5)
 BuildRequires:	pam-devel
 BuildRequires:	pkgconfig(com_err)
+BuildRequires:	pkgconfig(sqlite3)
+BuildRequires:	pkgconfig(zlib)
 Requires(pre):	chkconfig grep coreutils sed rpm-helper
 Requires:	cleanfeed
 Requires:	sendmail-command
-Requires(post): systemd >= %{systemd_required_version}
+Requires:	%{libname} = %{EVRD}
+Requires:	%{libhist} = %{EVRD}
+Requires:	%{libsto} = %{EVRD}
+Requires(post):	systemd
 
 %global __requires_exclude perl\\(bigint.pl\\)|perl\\(ftp.pl\\)
 
@@ -71,33 +73,33 @@ Summary:	Runtime Library needed by %{name}
 Group:		System/Libraries
 
 %description -n	%{libname}
-Runtime librairy for %{name}.
+Runtime library for %{name}.
 
 %package -n	%{libhist}
 Summary:	Runtime Library needed by %{name}
 Group:		System/Libraries
 
 %description -n	%{libhist}
-Runtime librairy for %{name}.
+History runtime library for %{name}.
 
 %package -n	%{libsto}
 Summary:	Runtime Library needed by %{name}
 Group:		System/Libraries
 
 %description -n	%{libsto}
-Runtime librairy for %{name}.
+Storage runtime library for %{name}.
 
 %package -n	%{devname}
-Summary:	Developements headers for %{name}
+Summary:	Development headers for %{name}
 Group:		Development/C++
-Requires:	%{libname} = %{version}-%{release}
-Requires:	%{libhist} = %{version}-%{release}
-Requires:	%{libsto} = %{version}-%{release}
-Provides:	%{name}-devel = %{version}-%{release}
-Provides:	lib%{name}-devel = %{version}-%{release}
+Requires:	%{libname} = %{EVRD}
+Requires:	%{libhist} = %{EVRD}
+Requires:	%{libsto} = %{EVRD}
+Provides:	%{name}-devel = %{EVRD}
+Provides:	lib%{name}-devel = %{EVRD}
 
 %description -n	%{devname}
-Headers files to build packages against %{name}.
+Header files to build packages against %{name}.
 
 %package -n	inews
 Summary:	Sends Usenet articles to a local news server for distribution
@@ -124,24 +126,36 @@ local news servers.
 	--sysconfdir=%{_sysconfdir}/news \
 	--bindir=%{_libexecdir}/news \
 	--exec-prefix=%{_libexecdir}/news \
-	--with-log-dir=/var/log/news --with-spool-dir=/var/spool/news\
-	--with-tmp-dir=%{_sharedstatedir}/news/tmp \
-	--with-db-dir=/var/lib/news --with-run-dir=/run/news \
-	--with-perl --enable-shared --disable-static \
+	--with-log-dir=/var/log/news \
+	--with-spool-dir=/var/spool/news \
+	--with-tmp-dir=%{newsdb}/tmp \
+	--with-db-dir=%{newsdb} \
+	--with-run-dir=/run/news \
+	--with-perl \
+	--enable-shared \
+	--disable-static \
 	--enable-tagged-hash \
 	--with-libperl-dir=%{perl_vendorlib} \
-	--with-news-user=news --with-news-group=news \
+	--with-news-user=news \
+	--with-news-group=news \
 	--with-news-master=news \
 	--with-openssl \
 	--with-sendmail=/usr/sbin/sendmail \
-	--with-http-dir=%{_sharedstatedir}/news/http \
-	--with-pic
+	--with-http-dir=%{newsdb}/http \
+	--with-pic \
+	--with-sqlite3 \
+	--with-zlib
+
+# Don't hardcode rpath
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
 %__make
 
 %install
 mkdir -p %{buildroot}%{_libdir}
-mkdir -p %{buildroot}%{_sharedstatedir}/news/http
+mkdir -p %{buildroot}%{newsdb}/http
+mkdir -p %{buildroot}%{newsdb}/tmp
 # mock cannot chown to news — stub chown/chgrp on PATH
 mkdir -p .stubbin
 cat > .stubbin/chown <<'STUB'
@@ -164,11 +178,15 @@ for f in include/clibrary.h include/config.h include/inn/*.h; do
 	install -p -m 0644 "$f" %{buildroot}%{_includedir}/inn/
 done
 
-touch %{buildroot}%{_sharedstatedir}/news/history
-touch %{buildroot}%{_sharedstatedir}/news/subscriptions
-chmod 644 %{buildroot}%{_sharedstatedir}/news/subscriptions || true
+# Ensure pathdb files exist where configure put them
+touch %{buildroot}%{newsdb}/history
+touch %{buildroot}%{newsdb}/subscriptions
+[ -e %{buildroot}%{newsdb}/active ] || touch %{buildroot}%{newsdb}/active
+[ -e %{buildroot}%{newsdb}/active.times ] || touch %{buildroot}%{newsdb}/active.times
+[ -e %{buildroot}%{newsdb}/newsgroups ] || touch %{buildroot}%{newsdb}/newsgroups
+chmod 644 %{buildroot}%{newsdb}/subscriptions || true
 
-install -m 644 %{SOURCE2} %{buildroot}%{_sharedstatedir}/news/distributions
+install -m 644 %{SOURCE2} %{buildroot}%{newsdb}/distributions
 
 mkdir -p %{buildroot}%{_unitdir}
 install -p -m 0644 %{SOURCE20} %{buildroot}%{_unitdir}
@@ -186,8 +204,8 @@ PATH=/bin:%{_bindir}:%{_libexecdir}/news
 export PATH
 EOF
 
-#Fix perms in sample directory to avoid bogus dependencies
-find samples -name "*.in" -exec chmod a-x {} \;
+# Fix perms in sample directory to avoid bogus dependencies
+find samples -name "*.in" -exec chmod a-x {} \; 2>/dev/null || true
 
 # we get this from cleanfeed
 rm -f %{buildroot}%{_libexecdir}/news/filter/filter_innd.pl
@@ -196,31 +214,35 @@ mkdir -p %{buildroot}%{_bindir}
 ln -sf %{_libexecdir}/news/inews %{buildroot}%{_bindir}/inews
 ln -sf %{_libexecdir}/news/rnews %{buildroot}%{_bindir}/rnews
 
-# fix debuginfo extraction, permissions are set in files section, anyway
-chmod u+w %{buildroot}%{_libdir}/lib{inn{,hist},storage}.so.* || true
-pushd %{buildroot}%{_libexecdir}/news
-# only chmod files that exist (layout varies by inn version)
-for f in actsync archive batcher buffindexed_d convdate ctlinnd cvtbatch fastrm getlist \
-	imapfeed inews makedbz ninpaths nnrpd nntpget shlock shrinkfile sm tdx-util tinyleaf \
-	auth/passwd/* auth/resolv/* expire expireover grephistory makehistory prunehistory \
-	buffchan filechan overchan innbind innconfval innd inndf innfeed innxbatch innxmit \
-	ovdb_init ovdb_monitor ovdb_server ovdb_stat rnews rnews.libexec/*; do
-	[ -e "$f" ] && chmod u+w "$f" || true
-done
-popd
+# fix debuginfo extraction: make libs and bins writable for objcopy
+chmod u+w %{buildroot}%{_libdir}/libinn.so.* \
+	%{buildroot}%{_libdir}/libinnhist.so.* \
+	%{buildroot}%{_libdir}/libinnstorage.so.* 2>/dev/null || true
+find %{buildroot}%{_libexecdir}/news -type f -exec chmod u+w {} + 2>/dev/null || true
 
-# (sb) doc install conflicts with rpm %%doc, even when config is setup
-# correctly. Just rm these files and let %%doc take care of it
+# PATHLIB scripts land in libdir; keep them there (innreport uses PATHLIB)
+# ensure they are present for packaging
+for f in innreport-display.conf innreport_inn.pm innshellvars innshellvars.pl innshellvars.tcl; do
+	if [ ! -e %{buildroot}%{_libdir}/$f ] && [ -e scripts/$f ]; then
+		install -p -m 0644 scripts/$f %{buildroot}%{_libdir}/$f
+	fi
+done
+
+# (sb) doc install conflicts with rpm %%doc
 rm -fr %{buildroot}/%{_usr}/doc
 
 # Remove unwanted files
 rm -rf %{buildroot}%{_libdir}/*.la
 rm -rf %{buildroot}%{_libdir}/*.a
+rm -rf %{buildroot}%{_libexecdir}/news/filter/__pycache__
 
 install -D -p -m 0644 %{SOURCE11} %{buildroot}%{_tmpfilesdir}/%{name}.conf
 
-# (tv) fix build:
-chmod u+rx %{buildroot}/var/lib/news/http || true
+chmod u+rx %{buildroot}%{newsdb}/http || true
+mkdir -p %{buildroot}%{newsdb}/tmp
+mkdir -p %{buildroot}/var/log/news/OLD
+mkdir -p %{buildroot}/var/spool/news/{archive,articles,incoming/bad,innfeed,outgoing,overview}
+mkdir -p %{buildroot}/run/news
 
 %pre
 %_pre_useradd news /etc/news %{_sbindir}/nologin
@@ -229,63 +251,55 @@ chmod u+rx %{buildroot}/var/lib/news/http || true
 %_pre_useradd news /etc/news %{_sbindir}/nologin
 
 %post
-%_tmpfilescreate %{name}
 %_post_service innd
 
 umask 002
-touch /var/log/news/news.notice
-touch /var/log/news/news.crit
-touch /var/log/news/news.err
-[ -f /var/lib/news/active.times ] || {
-    touch /var/lib/news/active.times
-    chown news:news /var/lib/news/active.times
-}
-chown -R news:news /var/log/news*
+touch /var/log/news/news.notice /var/log/news/news.crit /var/log/news/news.err
+chown -R news:news /var/log/news* 2>/dev/null || true
 
-if [ `hostname -f` ]; then
-  if [ `cat /etc/news/inn.conf | grep '^server:' | wc -l` -lt 1 ]; then
-    echo "server: `hostname -f`" >> /etc/news/inn.conf
-  fi
+if [ ! -f %{newsdb}/history.dir ]; then
+	if [ -x %{_libexecdir}/news/makedbz ]; then
+		su -m news -c '%{_libexecdir}/news/makedbz -i -o' 2>/dev/null || true
+	fi
+fi
 
-  if [ -f /var/lib/news/history ]; then
-        cd /var/lib/news
-	%{_bindir}/makedbz -s `wc -l <history` -f history
-        for i in dir hash index pag; do
-                [ -f history.n.$i ] && mv history.n.$i history.$i
-        done
-        chown news:news history.*
-        chmod 644 history.*
-  else
-        cd /var/lib/news
-        cp /dev/null history
-        %{_bindir}/makehistory 
-	%{_bindir}/makedbz -s `wc -l <history` -f history
-        for i in dir hash index pag; do
-                [ -f history.n.$i ] && mv history.n.$i history.$i
-        done
-        chown news:news history history.*
-        chmod 644 history history.*
-  fi
-else
-  echo "Network misconfigured, manual setup required..."
+if [ -f %{newsdb}/active.times ]; then
+	chown news:news %{newsdb}/active.times 2>/dev/null || true
+fi
+
+# history ownership
+if [ -d %{newsdb} ]; then
+	cd %{newsdb}
+	if ls history.* >/dev/null 2>&1; then
+		chown news:news history.* 2>/dev/null || true
+		chmod 644 history.* 2>/dev/null || true
+	fi
+	if [ -f history ]; then
+		chown news:news history history.* 2>/dev/null || true
+		chmod 644 history history.* 2>/dev/null || true
+	fi
+fi
+
+if [ ! -f /etc/news/inn.conf ]; then
+	echo "Network misconfigured, manual setup required..."
 fi
 
 %preun
 %_preun_service innd
 
 if [ $1 = 0 ]; then
-    if [ -f /var/lib/news/history.dir ]; then
-       rm -f /var/lib/news/history.*
-    fi
+	if [ -f %{newsdb}/history.dir ]; then
+		rm -f %{newsdb}/history.*
+	fi
 fi
 
 %postun
 if [ "$1" -ge "1" ]; then
-    service innd restart > /dev/null 2>&1
+	service innd restart > /dev/null 2>&1 || true
 fi
 
 %files
-%doc NEWS README* HACKING ChangeLog CONTRIBUTORS LICENSE INSTALL FAQ.html
+%doc NEWS README* HACKING CONTRIBUTORS LICENSE INSTALL FAQ.html
 %doc doc/config-design doc/history-innfeed doc/GPL doc/sample-control
 %doc doc/config-semantics doc/external-auth TODO doc/hook-python doc/config-syntax
 %doc doc/hook-perl doc/history
@@ -303,7 +317,6 @@ fi
 
 %defattr(-,news,news)
 %dir %{_sysconfdir}/news
-%config(noreplace) %{_sysconfdir}/news/passwd.nntp
 %config(noreplace) %{_sysconfdir}/news/send-uucp.cf
 %config(noreplace) %{_sysconfdir}/news/actsync.cfg
 %config(noreplace) %{_sysconfdir}/news/motd.innd.sample
@@ -329,18 +342,20 @@ fi
 %config(noreplace) %{_sysconfdir}/news/nocem.ctl
 %config(noreplace) %{_sysconfdir}/news/incoming.conf
 %config(noreplace) %{_sysconfdir}/news/inn-radius.conf
+%config(noreplace) %attr(0660,news,news) %{_sysconfdir}/news/inn-secrets.conf
 %config(noreplace) %{_sysconfdir}/news/ovdb.conf
+%config(noreplace) %{_sysconfdir}/news/ovsqlite.conf
 %config(noreplace) %{_sysconfdir}/news/newsfeeds
 %config(noreplace) %{_sysconfdir}/news/readers.conf
 %config(noreplace) %{_sysconfdir}/news/distributions
 
-%dir %{_sharedstatedir}/news
-%config(noreplace) %{_sharedstatedir}/news/active
-%config(noreplace) %{_sharedstatedir}/news/active.times
-%config(noreplace) %{_sharedstatedir}/news/subscriptions
-%config(noreplace) %{_sharedstatedir}/news/history
-%config(noreplace) %{_sharedstatedir}/news/distributions
-%config(noreplace) %{_sharedstatedir}/news/newsgroups
+%dir %{newsdb}
+%config(noreplace) %{newsdb}/active
+%config(noreplace) %{newsdb}/active.times
+%config(noreplace) %{newsdb}/subscriptions
+%config(noreplace) %{newsdb}/history
+%config(noreplace) %{newsdb}/distributions
+%config(noreplace) %{newsdb}/newsgroups
 
 %config(noreplace) %{_sysconfdir}/news/innshellvars.pl.local
 %config(noreplace) %{_sysconfdir}/news/innshellvars.local
@@ -351,12 +366,14 @@ fi
 %dir %{_libexecdir}/news
 %{_libexecdir}/news/controlbatch
 %attr(4510,root,news) %{_libexecdir}/news/innbind
+%{_libexecdir}/news/delayer
 %{_libexecdir}/news/docheckgroups
 %{_libexecdir}/news/imapfeed
-%{_libexecdir}/news/send-nntp
 %{_libexecdir}/news/actmerge
 %{_libexecdir}/news/ovdb_server
-%{_libexecdir}/news/filechan
+%{_libexecdir}/news/ovsqlite-server
+%{_libexecdir}/news/ovsqlite-util
+%{_libexecdir}/news/gencancel
 %{_libexecdir}/news/ninpaths
 %{_libexecdir}/news/mod-active
 %{_libexecdir}/news/news2mail
@@ -404,7 +421,6 @@ fi
 %{_libexecdir}/news/ovdb_stat
 %{_libexecdir}/news/prunehistory
 %{_libexecdir}/news/innreport
-%attr(0644,root,news) %{_libexecdir}/news/innreport_inn.pm
 %{_libexecdir}/news/getlist
 %{_libexecdir}/news/innd
 %{_libexecdir}/news/innupgrade
@@ -413,7 +429,6 @@ fi
 %{_libexecdir}/news/innwatch
 %{_libexecdir}/news/inncheck
 %{_libexecdir}/news/writelog
-%{_libexecdir}/news/signcontrol
 %{_libexecdir}/news/tdx-util
 %{_libexecdir}/news/tally.control
 %{_libexecdir}/news/overchan
@@ -425,6 +440,13 @@ fi
 %{_libexecdir}/news/ovdb_monitor
 %{_libexecdir}/news/sendxbatches
 
+# PATHLIB support files (installed to libdir by upstream)
+%attr(0644,root,news) %{_libdir}/innreport_inn.pm
+%attr(0644,root,news) %{_libdir}/innreport-display.conf
+%attr(0644,root,news) %{_libdir}/innshellvars.pl
+%attr(0644,root,news) %{_libdir}/innshellvars
+%attr(0644,root,news) %{_libdir}/innshellvars.tcl
+
 %define filterdir %{_libexecdir}/news/filter
 %dir %{filterdir}
 %{filterdir}/filter_nnrpd.pl
@@ -434,7 +456,6 @@ fi
 %{filterdir}/nnrpd_access.py*
 %{filterdir}/nnrpd_auth.pl
 %{filterdir}/INN.py*
-%{filterdir}/__pycache__/
 %{filterdir}/nnrpd.py*
 %{filterdir}/filter_innd.py*
 %{filterdir}/nnrpd_dynamic.py*
@@ -455,12 +476,9 @@ fi
 
 %define controldir %{_libexecdir}/news/control
 %dir %{controldir}
-%{controldir}/version.pl
 %{controldir}/ihave.pl
-%{controldir}/sendsys.pl
 %{controldir}/sendme.pl
 %{controldir}/checkgroups.pl
-%{controldir}/senduuname.pl
 %{controldir}/newgroup.pl
 %{controldir}/rmgroup.pl
 
@@ -472,12 +490,8 @@ fi
 %{rnewsdir}/bunbatch
 %{rnewsdir}/c7unbatch
 
-%{_libexecdir}/news/innshellvars.pl
-%{_libexecdir}/news/innshellvars
-%{_libexecdir}/news/innshellvars.tcl
-
-%attr(0775,root,news) %dir %{_sharedstatedir}/news/http
-%{_sharedstatedir}/news/http/innreport.css
+%attr(0775,root,news) %dir %{newsdb}/http
+%{newsdb}/http/innreport.css
 
 %{perl_vendorlib}/INN
 
@@ -492,7 +506,7 @@ fi
 %dir /var/spool/news/overview
 %dir /var/log/news
 %dir /var/log/news/OLD
-%dir /var/lib/news/tmp
+%dir %{newsdb}/tmp
 %ghost %dir /run/news
 
 %{_mandir}/man1/*
@@ -507,15 +521,18 @@ fi
 %{_libdir}/lib%{name}hist.so.%{major_h}{,.*}
 
 %files -n %{libsto}
-%{_libdir}/libstorage.so.%{major_s}{,.*}
+%{_libdir}/lib%{name}storage.so.%{major_s}{,.*}
 
 %files -n %{devname}
 %{_includedir}/inn
 %{_mandir}/man3/*
-%{_libdir}/*.so
+%{_libdir}/libinn.so
+%{_libdir}/libinnhist.so
+%{_libdir}/libinnstorage.so
 
 %files -n inews
 %config(noreplace) %attr(-,news,news) %{_sysconfdir}/news/inn.conf
+%config(noreplace) %attr(-,news,news) %{_sysconfdir}/news/passwd.nntp
 %{_bindir}/inews
 %attr(0755,root,root) %{_libexecdir}/news/inews
 %{_mandir}/man1/inews.1*
