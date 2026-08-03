@@ -11,7 +11,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.7.4
-Release:	8
+Release:	9
 License:	GPLv2+
 Group:		System/Servers
 URL:		https://www.isc.org/downloads/projects/
@@ -199,35 +199,14 @@ ln -sf %{_libexecdir}/news/rnews %{buildroot}%{_bindir}/rnews
 # fix debuginfo extraction, permissions are set in files section, anyway
 chmod u+w %{buildroot}%{_libdir}/lib{inn{,hist},storage}.so.* || true
 pushd %{buildroot}%{_libexecdir}/news
-chmod u+w \
-          actsync \
-          archive \
-          auth/passwd/{auth_krb5,ckpasswd,radius} \
-          auth/resolv/{domain,ident} \
-          batcher \
-          {buff,file,over}chan \
-          buffindexed_d \
-          convdate \
-          ctlinnd \
-          cvtbatch \
-          expire{,over} \
-          fastrm \
-          getlist \
-          {grep,make,prune}history \
-          imapfeed \
-          inews \
-          inn{bind,confval,d,df,feed,xbatch,xmit} \
-          makedbz \
-          ninpaths \
-          nnrpd \
-          nntpget \
-          ovdb_{init,monitor,server,stat} \
-          rnews{,.libexec/{de,en}code} \
-          shlock \
-          shrinkfile \
-          sm \
-          tdx-util \
-          tinyleaf
+# only chmod files that exist (layout varies by inn version)
+for f in actsync archive batcher buffindexed_d convdate ctlinnd cvtbatch fastrm getlist \
+	imapfeed inews makedbz ninpaths nnrpd nntpget shlock shrinkfile sm tdx-util tinyleaf \
+	auth/passwd/* auth/resolv/* expire expireover grephistory makehistory prunehistory \
+	buffchan filechan overchan innbind innconfval innd inndf innfeed innxbatch innxmit \
+	ovdb_init ovdb_monitor ovdb_server ovdb_stat rnews rnews.libexec/*; do
+	[ -e "$f" ] && chmod u+w "$f" || true
+done
 popd
 
 # (sb) doc install conflicts with rpm %%doc, even when config is setup
