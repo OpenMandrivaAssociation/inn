@@ -11,7 +11,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.7.4
-Release:	5
+Release:	6
 License:	GPLv2+
 Group:		System/Servers
 URL:		https://www.isc.org/downloads/projects/
@@ -142,13 +142,19 @@ local news servers.
 %install
 mkdir -p %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_sharedstatedir}/news/http
-# Neutralize ownership changes (mock cannot chown to news)
-find . -type f \( -name Makefile -o -name 'Makefile.*' \) -print0 | xargs -0 -r sed -i \
-	-e 's/[ \t]chown[ \t]/true /g' \
-	-e 's/[ \t]chgrp[ \t]/true /g' \
-	-e 's/^chown /true /g' \
-	-e 's/^chgrp /true /g'
-make install DESTDIR=%{buildroot} NEWSUSER=root NEWSGROUP=root RUNASUSER=root RUNASGROUP=root || \
+# mock cannot chown to news — stub chown/chgrp on PATH
+mkdir -p .stubbin
+cat > .stubbin/chown <<'STUB'
+#!/bin/sh
+exit 0
+STUB
+cat > .stubbin/chgrp <<'STUB'
+#!/bin/sh
+exit 0
+STUB
+chmod +x .stubbin/chown .stubbin/chgrp
+PATH=$(pwd)/.stubbin:$PATH
+export PATH
 make install DESTDIR=%{buildroot} NEWSUSER=$(id -un) NEWSGROUP=$(id -gn)
 
 # -- Install man pages needed by suck et al.
