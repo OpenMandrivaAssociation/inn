@@ -11,7 +11,7 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.7.4
-Release:	6
+Release:	7
 License:	GPLv2+
 Group:		System/Servers
 URL:		https://www.isc.org/downloads/projects/
@@ -157,15 +157,11 @@ PATH=$(pwd)/.stubbin:$PATH
 export PATH
 make install DESTDIR=%{buildroot} NEWSUSER=$(id -un) NEWSGROUP=$(id -gn)
 
-# -- Install man pages needed by suck et al.
+# Headers for development (paths vary by inn version)
 mkdir -p %{buildroot}%{_includedir}/inn
-for f in clibrary.h config.h
-do
-    install -p -m 0644 ./include/$f %{buildroot}%{_includedir}/inn
-done
-for f in defines.h system.h libinn.h storage.h options.h dbz.h
-do
-    install -p -m 0644 ./include/inn/$f %{buildroot}%{_includedir}/inn
+for f in include/clibrary.h include/config.h include/inn/*.h; do
+	[ -f "$f" ] || continue
+	install -p -m 0644 "$f" %{buildroot}%{_includedir}/inn/
 done
 
 touch %{buildroot}%{_sharedstatedir}/news/history
