@@ -1,3 +1,1 @@
 addFilter("lib-package-without-%mklibname")
-addFilter("invalid-license")
-addFilter("unused-rpmlintrc-filter")
