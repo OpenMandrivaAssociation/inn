@@ -11,11 +11,12 @@
 Summary:	The InterNetNews (INN) system, a Usenet news server
 Name:		inn
 Version:	2.7.4
-Release:	2
+Release:	3
 License:	GPLv2+
 Group:		System/Servers
 URL:		https://www.isc.org/downloads/projects/
 Source0:	ftp://ftp.isc.org/isc/inn/inn-%{version}.tar.gz
+Source100:	inn.rpmlintrc
 Source2:	inn-default-distributions
 Source10:	http://www.eyrie.org/~eagle/faqs/inn.html
 Source11:	inn-tmpfiles.conf
@@ -142,7 +143,7 @@ local news servers.
 %install
 mkdir -p %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_sharedstatedir}/news/http
-make install DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR=%{buildroot} NEWSUSER=$(id -un) NEWSGROUP=$(id -gn)
 
 # -- Install man pages needed by suck et al.
 mkdir -p %{buildroot}%{_includedir}/inn

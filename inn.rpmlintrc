@@ -1,0 +1,5 @@
+addFilter("lib-package-without-%mklibname")
+addFilter("invalid-license")
+addFilter("unversioned-explicit-obsoletes")
+addFilter("no-%check-section")
+addFilter("macro-in-comment")
